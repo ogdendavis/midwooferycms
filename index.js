@@ -1,10 +1,20 @@
+// Continue from https://www.robinwieruch.de/node-express-server-rest-api#modular-models-in-express-as-data-sources
+
+/* NPM imports */
+
 // Express to manage the API
-const express = require('express');
+import express from 'express';
 // Express middleware
-const bodyParser = require('body-parser');
-const cors = require('cors');
+import bodyParser from 'body-parser';
+import cors from 'cors';
 // To generate unique IDs for dogs
-const { v4: uuidv4 } = require('uuid');
+import { v4 as uuidv4 } from 'uuid';
+
+/* Local imports */
+
+import models from './models';
+console.log(models);
+/* And now the app! */
 
 // Spin up Express app
 const app = express();
@@ -14,35 +24,27 @@ app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
+// Bring in local data
+app.use((req, res, next) => {
+  req.context = {
+    models,
+  };
+  next();
+});
+
 // We'll listen on localhost:3000
 const port = 3000;
-
-// Temporary store
-let dogs = {
-  1: {
-    id: '1',
-    name: 'Figgy',
-    color: 'parti',
-    weight: '23',
-  },
-  2: {
-    id: '2',
-    name: 'Cedric',
-    color: 'apricot',
-    weight: '28',
-  },
-};
 
 /* Operations for the /dogs route */
 
 // Get all dogs
 app.get('/dogs', (req, res) => {
-  return res.send(Object.values(dogs));
+  return res.send(Object.values(req.context.models.dogs));
 });
 
 // Get one dog by id
 app.get('/dogs/:dogId', (req, res) => {
-  const dog = dogs[req.params.dogId];
+  const dog = req.context.models.dogs[req.params.dogId];
   if (dog) {
     return res.send(dog);
   }
@@ -64,18 +66,18 @@ app.post('/dogs', (req, res) => {
     color: req.body.color,
     weight: req.body.weight,
   };
-  dogs[id] = newDog;
+  req.context.models.dogs[id] = newDog;
   // Confirm by sending the new dog back to the user
-  return res.send(dogs[id]);
+  return res.send(req.context.models.dogs[id]);
 });
 
 // Update a dog by ID
 app.put('/dogs/:dogId', (req, res) => {
-  if (!dogs[req.params.dogId]) {
+  if (!req.context.models.dogs[req.params.dogId]) {
     return res.send(`No dog with ID ${req.params.dogId}`);
   }
   // Make a copy of the existing dog to modify
-  const targetDog = dogs[req.params.dogId];
+  const targetDog = req.context.models.dogs[req.params.dogId];
   // Manually going through potential update items, for now
   if (req.body.name) {
     targetDog.name = req.body.name;
@@ -87,18 +89,18 @@ app.put('/dogs/:dogId', (req, res) => {
     targetDog.weight = req.body.weight;
   }
   // Change the old dog to the updated one
-  dogs[req.params.dogId] = targetDog;
+  req.context.models.dogs[req.params.dogId] = targetDog;
   // Send updated dog back to confirm
-  return res.send(dogs[req.params.dogId]);
+  return res.send(req.context.models.dogs[req.params.dogId]);
 });
 
 // Delete a dog by ID
 app.delete('/dogs/:dogId', (req, res) => {
-  if (!dogs[req.params.dogId]) {
+  if (!req.context.models.dogs[req.params.dogId]) {
     return res.send(`No dog with ID ${req.params.dogId}`);
   }
-  const { [req.params.dogId]: dog, ...otherDogs } = dogs;
-  dogs = otherDogs;
+  const { [req.params.dogId]: dog, ...otherDogs } = req.context.models.dogs;
+  req.context.models.dogs = otherDogs;
   return res.send(dog);
 });
 
