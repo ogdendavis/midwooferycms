@@ -2,9 +2,10 @@
   "name": "midwooferycms",
   "version": "0.0.1",
   "description": "Content management system specifically for dog breeders",
-  "main": "app.js",
+  "main": "index.js",
   "private": true,
   "scripts": {
+    "start": "nodemon --exec babel-node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Lucas Ogden-Davis",
@@ -14,5 +15,10 @@
     "cors": "^2.8.5",
     "express": "^4.17.1",
     "uuid": "^8.3.1"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.12.3",
+    "@babel/node": "^7.12.1",
+    "@babel/preset-env": "^7.12.1"
   }
 }
