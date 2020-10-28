@@ -5,7 +5,9 @@
   "main": "index.js",
   "private": true,
   "scripts": {
-    "start": "nodemon --exec babel-node src/index.js",
+    "prestart": "pg_ctl -D /usr/local/var/postgres restart -w",
+    "start": "nodemon -r dotenv/config --exec babel-node src/index.js",
+    "poststart": "pg_ctl -D /usr/local/var/postgres stop -m smart",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Lucas Ogden-Davis",
@@ -13,12 +15,16 @@
   "dependencies": {
     "body-parser": "^1.19.0",
     "cors": "^2.8.5",
+    "dotenv": "^8.2.0",
     "express": "^4.17.1",
+    "pg": "^8.4.2",
+    "sequelize": "^6.3.5",
     "uuid": "^8.3.1"
   },
   "devDependencies": {
     "@babel/core": "^7.12.3",
     "@babel/node": "^7.12.1",
-    "@babel/preset-env": "^7.12.1"
+    "@babel/preset-env": "^7.12.1",
+    "nodemon": "^2.0.6"
   }
 }

@@ -12,7 +12,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 /* Local imports */
 
-import models from './models';
+import models, { sequelize } from './models';
 import routes from './routes';
 
 /* And now the app! */
@@ -25,7 +25,7 @@ app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-// Bring in local data
+// Bring in local data by adding it as context in middleware step
 app.use((req, res, next) => {
   req.context = {
     models,
@@ -36,10 +36,9 @@ app.use((req, res, next) => {
 // Bring in routes
 app.use('/dogs', routes.dogs);
 
-// We'll listen on localhost:3000
-const port = 3000;
-
-// Make it go!
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+// Use Sequelize to connect to the database, and then listen on the port indicated in .env
+sequelize.sync().then(() => {
+  app.listen(process.env.PORT, () => {
+    console.log(`Server running on port ${process.env.PORT}`);
+  });
 });

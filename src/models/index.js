@@ -1,17 +1,21 @@
-// Temporary store
-let dogs = {
-  1: {
-    id: '1',
-    name: 'Figgy',
-    color: 'parti',
-    weight: '23',
-  },
-  2: {
-    id: '2',
-    name: 'Cedric',
-    color: 'apricot',
-    weight: '28',
-  },
+import Sequelize, { DataTypes } from 'sequelize';
+
+// import models
+import dog from './dog';
+
+const sequelize = new Sequelize(
+  process.env.DATABASE,
+  process.env.DATABASE_USER,
+  process.env.DATABASE_PASSWORD,
+  {
+    dialect: 'postgres',
+  }
+);
+
+const models = {
+  Dog: dog(sequelize, DataTypes),
 };
 
-export default { dogs };
+export { sequelize };
+
+export default models;
