@@ -1,49 +1,15 @@
-// Continue from https://www.robinwieruch.de/node-express-server-rest-api#modular-models-in-express-as-data-sources
-
-/* NPM imports */
-
-// Express to manage the API
-import express from 'express';
-// Express middleware
-import bodyParser from 'body-parser';
-import cors from 'cors';
-// To generate unique IDs for dogs
+import Router from 'express';
 import { v4 as uuidv4 } from 'uuid';
 
-/* Local imports */
-
-import models from './models';
-console.log(models);
-/* And now the app! */
-
-// Spin up Express app
-const app = express();
-
-// Middleware config
-app.use(cors());
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
-
-// Bring in local data
-app.use((req, res, next) => {
-  req.context = {
-    models,
-  };
-  next();
-});
-
-// We'll listen on localhost:3000
-const port = 3000;
-
-/* Operations for the /dogs route */
+const router = Router();
 
 // Get all dogs
-app.get('/dogs', (req, res) => {
+router.get('/', (req, res) => {
   return res.send(Object.values(req.context.models.dogs));
 });
 
 // Get one dog by id
-app.get('/dogs/:dogId', (req, res) => {
+router.get('/:dogId', (req, res) => {
   const dog = req.context.models.dogs[req.params.dogId];
   if (dog) {
     return res.send(dog);
@@ -52,7 +18,7 @@ app.get('/dogs/:dogId', (req, res) => {
 });
 
 // Create a dog
-app.post('/dogs', (req, res) => {
+router.post('/', (req, res) => {
   // Check for required input
   if (!req.body.name || !req.body.color || !req.body.weight) {
     return res.send('Please provide new dog name, color, and weight');
@@ -72,7 +38,7 @@ app.post('/dogs', (req, res) => {
 });
 
 // Update a dog by ID
-app.put('/dogs/:dogId', (req, res) => {
+router.put('/:dogId', (req, res) => {
   if (!req.context.models.dogs[req.params.dogId]) {
     return res.send(`No dog with ID ${req.params.dogId}`);
   }
@@ -95,7 +61,7 @@ app.put('/dogs/:dogId', (req, res) => {
 });
 
 // Delete a dog by ID
-app.delete('/dogs/:dogId', (req, res) => {
+router.delete('/:dogId', (req, res) => {
   if (!req.context.models.dogs[req.params.dogId]) {
     return res.send(`No dog with ID ${req.params.dogId}`);
   }
@@ -104,7 +70,4 @@ app.delete('/dogs/:dogId', (req, res) => {
   return res.send(dog);
 });
 
-// Make it go!
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
-});
+export default router;
