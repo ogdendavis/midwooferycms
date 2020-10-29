@@ -9,6 +9,23 @@ const dog = (sequelize, DataTypes) => {
         notEmpty: true,
       },
     },
+    breed: {
+      type: DataTypes.STRING,
+      defaultValue: '',
+    },
+    color: {
+      type: DataTypes.STRING,
+      defaultValue: '',
+    },
+    name: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: '',
+    },
+    weight: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+    },
   });
 
   return Dog;
