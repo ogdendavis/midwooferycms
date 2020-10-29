@@ -2,6 +2,7 @@ import Sequelize, { DataTypes } from 'sequelize';
 
 // import models
 import dog from './dog';
+import breeder from './breeder';
 
 const sequelize = new Sequelize(
   process.env.DATABASE,
@@ -14,6 +15,7 @@ const sequelize = new Sequelize(
 
 const models = {
   Dog: dog(sequelize, DataTypes),
+  Breeder: breeder(sequelize, DataTypes),
 };
 
 export { sequelize };
