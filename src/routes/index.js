@@ -1,3 +1,4 @@
+import breeders from './breeders';
 import dogs from './dogs';
 
-export default { dogs };
+export default { breeders, dogs };

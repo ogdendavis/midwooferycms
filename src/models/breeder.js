@@ -23,7 +23,7 @@ const breeder = (sequelize, DataTypes) => {
     },
     state: {
       type: DataTypes.STRING,
-      allowNull: false,
+      defaultValue: '',
     },
   });
 

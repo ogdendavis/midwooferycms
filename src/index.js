@@ -1,5 +1,3 @@
-// Continue from https://www.robinwieruch.de/node-express-server-rest-api#modular-models-in-express-as-data-sources
-
 /* NPM imports */
 
 // Express to manage the API
@@ -34,11 +32,48 @@ app.use((req, res, next) => {
 });
 
 // Bring in routes
+app.use('/breeders', routes.breeders);
 app.use('/dogs', routes.dogs);
 
+// If on dev, we'll re-seed the server every time we restart
+const eraseDatabaseOnSync = process.env.NODE_ENV === 'dev' ? true : false;
+
 // Use Sequelize to connect to the database, and then listen on the port indicated in .env
-sequelize.sync().then(() => {
+sequelize.sync({ force: eraseDatabaseOnSync }).then(() => {
+  if (eraseDatabaseOnSync) {
+    createDogAndBreeder();
+  }
   app.listen(process.env.PORT, () => {
     console.log(`Server running on port ${process.env.PORT}`);
   });
 });
+
+// Helper function to seed the server when starting in dev mode
+const createDogAndBreeder = async () => {
+  const figId = uuidv4();
+  const cedId = uuidv4();
+  const breederId = uuidv4();
+
+  await models.Dog.create({
+    id: figId,
+    breed: 'goldendoodle',
+    color: 'parti',
+    name: 'Figgy',
+    weight: '23',
+  });
+  await models.Dog.create({
+    id: cedId,
+    breed: 'goldendoodle',
+    color: 'apricot',
+    name: 'Cedric',
+    weight: '29',
+  });
+
+  await models.Breeder.create({
+    id: breederId,
+    firstname: 'Ji',
+    lastname: 'Khalsa',
+    city: 'Gainesville',
+    state: 'FL',
+  });
+};
