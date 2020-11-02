@@ -28,6 +28,10 @@ const dog = (sequelize, DataTypes) => {
     },
   });
 
+  Dog.associate = (models) => {
+    Dog.belongsTo(models.Breeder);
+  };
+
   return Dog;
 };
 

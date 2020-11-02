@@ -54,12 +54,21 @@ const createDogAndBreeder = async () => {
   const cedId = uuidv4();
   const breederId = uuidv4();
 
+  await models.Breeder.create({
+    id: breederId,
+    firstname: 'Ji',
+    lastname: 'Khalsa',
+    city: 'Gainesville',
+    state: 'FL',
+  });
+
   await models.Dog.create({
     id: figId,
     breed: 'goldendoodle',
     color: 'parti',
     name: 'Figgy',
     weight: '23',
+    breederId,
   });
   await models.Dog.create({
     id: cedId,
@@ -67,13 +76,6 @@ const createDogAndBreeder = async () => {
     color: 'apricot',
     name: 'Cedric',
     weight: '29',
-  });
-
-  await models.Breeder.create({
-    id: breederId,
-    firstname: 'Ji',
-    lastname: 'Khalsa',
-    city: 'Gainesville',
-    state: 'FL',
+    breederId,
   });
 };
