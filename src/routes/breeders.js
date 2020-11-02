@@ -20,6 +20,20 @@ router.get('/:breederId', async (req, res) => {
   return res.send(`No breeder with ID ${req.params.breederId}`);
 });
 
+// Get all of a breeder's dogs
+router.get('/:breederId/dogs', async (req, res) => {
+  const breeder = await req.context.models.Breeder.findByPk(
+    req.params.breederId
+  );
+  if (breeder) {
+    const dogs = await breeder.getDogs();
+    return dogs
+      ? res.send(dogs)
+      : `No dogs listed for breeder ${req.params.breederId}`;
+  }
+  return res.send(`No breeder with ID ${req.params.breederId}`);
+});
+
 // Create a breeder
 router.post('/', async (req, res) => {
   // Check for required fields
