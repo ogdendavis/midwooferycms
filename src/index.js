@@ -41,7 +41,7 @@ const eraseDatabaseOnSync = process.env.NODE_ENV === 'dev' ? true : false;
 // Use Sequelize to connect to the database, and then listen on the port indicated in .env
 sequelize.sync({ force: eraseDatabaseOnSync }).then(() => {
   if (eraseDatabaseOnSync) {
-    createDogAndBreeder();
+    populateDevDatabase();
   }
   app.listen(process.env.PORT, () => {
     console.log(`Server running on port ${process.env.PORT}`);
@@ -49,7 +49,7 @@ sequelize.sync({ force: eraseDatabaseOnSync }).then(() => {
 });
 
 // Helper function to seed the server when starting in dev mode
-const createDogAndBreeder = async () => {
+const populateDevDatabase = async () => {
   const figId = uuidv4();
   const cedId = uuidv4();
   const breederId = uuidv4();
