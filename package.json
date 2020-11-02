@@ -5,9 +5,9 @@
   "main": "index.js",
   "private": true,
   "scripts": {
-    "prestart": "pg_ctl -D /usr/local/var/postgres restart -w",
-    "start": "nodemon -r dotenv/config --exec babel-node src/index.js",
-    "poststart": "pg_ctl -D /usr/local/var/postgres stop -m smart",
+    "predev": "pg_ctl -D /usr/local/var/postgres restart -w",
+    "dev": "nodemon -r dotenv/config --exec babel-node src/index.js",
+    "postdev": "pg_ctl -D /usr/local/var/postgres stop -m smart",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Lucas Ogden-Davis",
