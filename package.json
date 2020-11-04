@@ -4,11 +4,15 @@
   "description": "Content management system specifically for dog breeders",
   "main": "index.js",
   "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ogdendavis/midwooferycms"
+  },
   "scripts": {
     "predev": "pg_ctl -D /usr/local/var/postgres restart -w",
     "dev": "nodemon -r dotenv/config --exec babel-node src/index.js",
     "postdev": "pg_ctl -D /usr/local/var/postgres stop -m smart",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "nyc mocha ./test"
   },
   "author": "Lucas Ogden-Davis",
   "license": "ISC",
@@ -25,6 +29,10 @@
     "@babel/core": "^7.12.3",
     "@babel/node": "^7.12.1",
     "@babel/preset-env": "^7.12.1",
-    "nodemon": "^2.0.6"
+    "chai": "^4.2.0",
+    "mocha": "^8.2.1",
+    "nodemon": "^2.0.6",
+    "nyc": "^15.1.0",
+    "sinon": "^9.2.1"
   }
 }
