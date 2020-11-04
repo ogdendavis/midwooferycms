@@ -12,7 +12,8 @@
     "predev": "pg_ctl -D /usr/local/var/postgres restart -w",
     "dev": "nodemon -r dotenv/config --exec babel-node src/index.js",
     "postdev": "pg_ctl -D /usr/local/var/postgres stop -m smart",
-    "test": "nyc mocha ./test"
+    "test": "jest",
+    "test:watch": "npm run test -- --watch"
   },
   "author": "Lucas Ogden-Davis",
   "license": "ISC",
@@ -26,13 +27,25 @@
     "uuid": "^8.3.1"
   },
   "devDependencies": {
+    "@babel/cli": "^7.12.1",
     "@babel/core": "^7.12.3",
     "@babel/node": "^7.12.1",
     "@babel/preset-env": "^7.12.1",
-    "chai": "^4.2.0",
-    "mocha": "^8.2.1",
+    "jest": "^26.6.3",
     "nodemon": "^2.0.6",
-    "nyc": "^15.1.0",
-    "sinon": "^9.2.1"
+    "regenerator-runtime": "^0.13.7",
+    "supertest": "^6.0.1"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "coveragePathIgnorePatterns": [
+      "/node_modules/"
+    ],
+    "setupFiles": [
+      "dotenv/config"
+    ],
+    "setupFilesAfterEnv": [
+      "<rootDir>tests/setup.js"
+    ]
   }
 }
