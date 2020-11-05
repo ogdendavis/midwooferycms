@@ -16,18 +16,19 @@ Currently runs on Node 12.18.1. It may or may not work with other versions.
 
 ## <a id="1"></a>Dev installation
 
+Requirements:
+
+- [Node](https://nodejs.dev/learn/how-to-install-nodejs) (^12.18.0)
+- [PostgreSQL](https://www.postgresql.org/docs/13/tutorial-install.html) (^13.0)
+
 To install:
 
 1. Git clone this repo
 2. npm install
 
-You'll need an .env with the following variables:
+Use env.example as a model for creating your own .env (You can copy env.example, to start). Variable names should be sufficiently self-explanatory.
 
-- **`DATABASE`** - Name of the PostgreSQL database you'll use for thie project
-- **`DATABASE_USER`** - Username with full permissions for the database
-- **`DATABASE_PASSWORD`** - Password for user indicated in `DATABASE_USER`
-- **`PORT`** - Port to use when serving app locally
-- **`NODE_ENV`** - Environment for app. Should be set to `dev`, until you go live
+It is strongly recommended to create separate databases for test, dev, and prod environments. If you're not familiar with setting up PostgreSQL databases locally, [here's a great guide](https://www.robinwieruch.de/postgres-sql-macos-setup). Test database is populated on test run via tests/databaseSetup.js -- modify the data there, if you want to change the info you're testing against.
 
 ## <a id="2"></a>Running locally
 
