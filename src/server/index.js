@@ -7,7 +7,7 @@ import bodyParser from 'body-parser';
 import cors from 'cors';
 
 // Local imports
-import models from '../models';
+import models from '../database/models';
 import routes from '../routes';
 
 // Spin up Express app

@@ -4,14 +4,19 @@ import Sequelize, { DataTypes } from 'sequelize';
 import dog from './dog';
 import breeder from './breeder';
 
-// Spin up our sequelize instance
+// import config
+import sequelizeConfig from '../config';
+
+// Spin up our sequelize instance, with environment depending on Sequelize config
+const env = process.env.NODE_ENV || 'dev';
+
 const sequelize = new Sequelize(
-  process.env.DATABASE,
-  process.env.DATABASE_USER,
-  process.env.DATABASE_PASSWORD,
+  sequelizeConfig[env].database,
+  sequelizeConfig[env].user,
+  sequelizeConfig[env].password,
   {
-    dialect: 'postgres',
-    logging: false,
+    dialect: sequelizeConfig[env].dialect,
+    logging: sequelizeConfig[env].logging,
   }
 );
 
