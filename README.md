@@ -38,6 +38,10 @@ postdev cleanup script doesn't run. Best practice when shutting down for the day
 
 The dev script resets the contents of the database on each restart. If you want to change the default data that the server starts with, make changes in the `populateDevDatabase` method of src/index.js.
 
+Run tests with `npm run test`. Make sure the database server is running -- can be running via dev, or run it alone as `pg_ctl -D /usr/local/var/postgres start`.
+
+Can run tests on watch mode with `npm run test:watch`. Use with `npm run dev` for test-driven development.
+
 ## <a id="3"></a>Routes
 
 ### GET

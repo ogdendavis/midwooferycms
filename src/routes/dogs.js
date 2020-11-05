@@ -15,7 +15,9 @@ router.get('/:dogId', async (req, res) => {
   if (dog) {
     return res.send(dog);
   }
-  return res.send(`No dog with ID ${req.params.dogId}`);
+  return res
+    .status(404)
+    .send(`(Status code ${res.statusCode}) No dog with ID ${req.params.dogId}`);
 });
 
 // Get a dog's breeder
@@ -25,14 +27,20 @@ router.get('/:dogId/breeder', async (req, res) => {
     const breeder = await dog.getBreeder();
     return breeder ? res.send(breeder) : `No breeder listed for ${dog.name}`;
   }
-  return res.send(`No dog with ID ${req.params.dogId}`);
+  return res
+    .status(404)
+    .send(`(Status code ${res.statusCode}) No dog with ID ${req.params.dogId}`);
 });
 
 // Create a dog
 router.post('/', async (req, res) => {
   // Check for required input
   if (!req.body.name) {
-    return res.send('You need to at least include a name to create a new dog');
+    return res
+      .status(400)
+      .send(
+        `(Status code ${res.statusCode}) You need to at least include a name to create a new dog`
+      );
   }
   // Generate random ID for the new dog
   const id = uuidv4();
@@ -45,8 +53,8 @@ router.post('/', async (req, res) => {
     ...(req.body.weight && { weight: req.body.weight }),
   });
 
-  // Confirm by sending the new dog back to the user
-  return res.send(newDog);
+  // Confirm by sending the new dog back to the user with status code indicating resource creation
+  return res.status(201).send(newDog);
 });
 
 // Update a dog by ID

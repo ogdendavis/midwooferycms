@@ -3,4 +3,4 @@
 // Jest only runs this file, since it's the only one with a .spec.js extension. Do any global setup here, and import tests.
 
 // Tests!
-import './routes.js';
+import './dogRoutes.js';
