@@ -34,27 +34,34 @@ router.get('/:dogId/breeder', async (req, res) => {
 
 // Create a dog
 router.post('/', async (req, res) => {
-  // Check for required input
-  if (!req.body.name) {
+  try {
+    // Check for required input
+    if (!req.body.name) {
+      return res
+        .status(400)
+        .send(
+          `(Status code ${res.statusCode}) You need to at least include a name to create a new dog`
+        );
+    }
+    // Generate random ID for the new dog, if one not provided
+    const id = req.body.id || uuidv4();
+    // Make the new dog, and add it to the database
+    const newDog = await req.context.models.Dog.create({
+      id,
+      name: req.body.name,
+      ...(req.body.breed && { breed: req.body.breed }),
+      ...(req.body.color && { color: req.body.color }),
+      ...(req.body.weight && { weight: req.body.weight }),
+      ...(req.body.breederId && { breederId: req.body.breederId }),
+    });
+
+    // Confirm by sending the new dog back to the user with status code indicating resource creation
+    return res.status(201).send(newDog);
+  } catch (er) {
     return res
       .status(400)
-      .send(
-        `(Status code ${res.statusCode}) You need to at least include a name to create a new dog`
-      );
+      .send(`(Status code ${res.statusCode}) Error processing request: ${er}`);
   }
-  // Generate random ID for the new dog
-  const id = uuidv4();
-  // Make the new dog, and add it to the database
-  const newDog = await req.context.models.Dog.create({
-    id,
-    name: req.body.name,
-    ...(req.body.breed && { breed: req.body.breed }),
-    ...(req.body.color && { color: req.body.color }),
-    ...(req.body.weight && { weight: req.body.weight }),
-  });
-
-  // Confirm by sending the new dog back to the user with status code indicating resource creation
-  return res.status(201).send(newDog);
 });
 
 // Update a dog by ID

@@ -64,32 +64,62 @@ describe('GET /dogs endpoints', () => {
 /*
  * POST
  */
-// Commented out until I get a test database up and running!
-// describe('POST /dogs endpoints', () => {
-//   test('Creates a dog from valid data', async () => {
-//     const dogData = {
-//       breed: 'unicorn dog',
-//       color: 'rainbow',
-//       name: 'TestDog',
-//       weight: 1,
-//     };
-//     const createdDogRes = await request(app).post('/dogs').send(dogData);
-//     expect(createdDogRes.statusCode).toEqual(201);
-//     // Check returned data
-//     console.log(createdDogRes.body);
-//     // const createdDog = createdDogRes.body;
-//     // expect(createdDog.breed).toEqual(dogData.breed);
-//     // expect(createdDog.color).toEqual(dogData.color);
-//     // expect(createdDog.name).toEqual(dogData.name);
-//     // expect(createdDog.weight).toEqual(dogData.weight);
-//     // expect(createdDog).toHaveProperty('id');
-//     // expect(createdDog).toHaveProperty('breederId');
-//
-//     // Cleanup!
-//     const deleted = await request(app).delete(`/dogs/${createdDogRes.body.id}`);
-//     expect(deleted.statusCode).toEqual(200);
-//   });
-// });
+
+describe('POST /dogs endpoints', () => {
+  test('Creates a dog from valid data', async () => {
+    const dogData = {
+      id: 'ud',
+      name: 'Wildfire',
+      breed: 'unicorn dog',
+      color: 'rainbow',
+      weight: 1,
+      breederId: 'b2',
+    };
+    const res = await request(app).post('/dogs').send(dogData);
+    expect(res.statusCode).toEqual(201);
+    expect(res.body).toEqual(
+      expect.objectContaining({
+        ...dogData,
+        createdAt: expect.anything(),
+        updatedAt: expect.anything(),
+      })
+    );
+  });
+
+  test('Creates a dog from valid partial data', async () => {
+    const partyDog = {
+      name: 'Audi',
+    };
+    const res = await request(app).post('/dogs').send(partyDog);
+    expect(res.statusCode).toEqual(201);
+    expect(res.body).toEqual(
+      expect.objectContaining({
+        id: expect.anything(),
+        breed: '',
+        color: '',
+        name: partyDog.name,
+        weight: 0,
+        breederId: null,
+        createdAt: expect.anything(),
+        updatedAt: expect.anything(),
+      })
+    );
+  });
+
+  test('Rejects invalid input', async () => {
+    // Should get a 400 error if trying to make a dog with bad data
+    const badDog = {
+      id: 'launcelot',
+      quest: 'to seek the holy grail',
+    };
+    const res = await request(app).post('/dogs').send(badDog);
+    expect(res.statusCode).toEqual(400);
+
+    // And the dog shouldn't have been created!
+    const getRes = await request(app).get(`/dogs/${badDog.id}`);
+    expect(getRes.statusCode).toEqual(404);
+  });
+});
 
 /*
  * Helper functions
