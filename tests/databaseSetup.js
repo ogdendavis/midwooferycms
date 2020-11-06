@@ -26,6 +26,13 @@ const breeders = [
     city: 'Kingston',
     state: 'RI',
   },
+  {
+    id: 'b3',
+    firstname: 'Monty',
+    lastname: 'Python',
+    city: 'London',
+    state: 'HI',
+  },
 ];
 
 const dogs = [

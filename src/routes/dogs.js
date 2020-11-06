@@ -68,29 +68,44 @@ router.post('/', async (req, res) => {
 router.put('/:dogId', async (req, res) => {
   const dogRes = await req.context.models.Dog.findByPk(req.params.dogId);
   if (!dogRes) {
-    return res.send(`No dog with ID ${req.params.dogId}`);
+    return res
+      .status(404)
+      .send(
+        `(Status code ${res.statusCode}) No dog with ID ${req.params.dogId}`
+      );
   }
 
   // Sequelize returns an object with the actual data wrapped under dataValues, so surface that to easily use!
   const dog = dogRes.dataValues;
 
-  // Use req.body to create an object that holds the proposed updates
-  const updates = { ...req.body };
-  // Filter out unwanted updates -- changes to ID or updates to properties that the dog doesn't have in the database
-  for (const key in updates) {
+  // Any invalid updates in the body should cancel the entire request
+  // Remember what is updated, and what's invalid, to return useful message
+  let [badKeys, goodKeys] = [[], []];
+  for (const key in req.body) {
     if (key === 'id' || !dog.hasOwnProperty(key)) {
-      delete updates[key];
+      badKeys.push(key);
+    } else {
+      goodKeys.push(key);
     }
+  }
+  if (badKeys.length > 0) {
+    return res
+      .status(400)
+      .send(
+        `(Status code ${
+          res.statusCode
+        }) Attempted to update inalid fields: ${badKeys.join(' ')}`
+      );
   }
 
   // Send the updates, and get back the updated dog
-  const updatedDog = await req.context.models.Dog.update(updates, {
+  const updatedDog = await req.context.models.Dog.update(req.body, {
     where: { id: req.params.dogId },
     returning: true,
   });
 
   // Send updated dog back to confirm -- it's a little buried in a return array, so surface it
-  return res.send(updatedDog[1][0]);
+  return res.send({ updated: goodKeys, result: updatedDog[1][0] });
 });
 
 // Delete a dog by ID

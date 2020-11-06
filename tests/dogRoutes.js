@@ -55,6 +55,7 @@ describe('GET /dogs endpoints', () => {
     expect(breeder).toHaveProperty('id');
     expect(breeder).toHaveProperty('firstname');
     expect(breeder).toHaveProperty('lastname');
+    expect(breeder.id).toEqual(testDog.breederId);
     // Check bad request
     const badBreederRes = await request(app).get('/dogs/123456789/breeder');
     expect(badBreederRes.statusCode).toEqual(404);
@@ -65,7 +66,7 @@ describe('GET /dogs endpoints', () => {
  * POST
  */
 
-describe('POST /dogs endpoints', () => {
+describe('POST /dogs endpoint', () => {
   test('Creates a dog from valid data', async () => {
     const dogData = {
       id: 'ud',
@@ -118,6 +119,66 @@ describe('POST /dogs endpoints', () => {
     // And the dog shouldn't have been created!
     const getRes = await request(app).get(`/dogs/${badDog.id}`);
     expect(getRes.statusCode).toEqual(404);
+  });
+});
+
+/*
+ * PUT
+ */
+
+describe('PUT /dogs endpoints', () => {
+  test('Updates with valid input', async () => {
+    const dogToUpdate = randomDog();
+    const dogUpdates = {
+      name: 'Ziggy',
+      weight: 999,
+      breed: 'zoomdog',
+      color: 'racing stripes',
+      breederId: 'b3',
+    };
+    const res = await request(app)
+      .put(`/dogs/${dogToUpdate.id}`)
+      .send(dogUpdates);
+    expect(res.statusCode).toEqual(200);
+    // Correct fields logged as updated
+    expect(res.body.updated).toEqual(Object.keys(dogUpdates));
+    // And correct values in those fields
+    expect(res.body.result).toEqual(
+      expect.objectContaining({ ...dogUpdates, id: dogToUpdate.id })
+    );
+  });
+
+  test('Rejects change to dog ID', async () => {
+    const dogToUpdate = randomDog();
+    const badUpdate = {
+      id: 'dontchangemebro',
+    };
+    const res = await request(app)
+      .put(`/dogs/${dogToUpdate.id}`)
+      .send(badUpdate);
+    expect(res.statusCode).toEqual(400);
+    expect(res.text).toEqual(expect.stringContaining('id'));
+  });
+
+  test('Extraneous or invalid changes cause entire request rejection', async () => {
+    const dogToUpdate = randomDog();
+    const mixedUpdate = {
+      name: 'Fred', // valid
+      id: 'nopez', // field exists, but should be immutable
+      fakezorz: 'trogdor', // field doesn't exist on dog model
+    };
+    // Test 'em all!
+    const res1 = await request(app)
+      .put(`/dogs/${dogToUpdate.id}`)
+      .send(mixedUpdate);
+    expect(res1.statusCode).toEqual(400);
+    expect(res1.text).toEqual(expect.stringContaining('id fakezorz'));
+    // Now withoutt ID
+    const res2 = await request(app)
+      .put(`/dogs/${dogToUpdate.id}`)
+      .send({ name: mixedUpdate.name, fakies: mixedUpdate.fakezorz });
+    expect(res2.statusCode).toEqual(400);
+    expect(res2.text).toEqual(expect.stringContaining('fakies'));
   });
 });
 
