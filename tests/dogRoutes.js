@@ -51,11 +51,12 @@ describe('GET /dogs endpoints', () => {
     const testDog = randomDog();
     const breederRes = await request(app).get(`/dogs/${testDog.id}/breeder`);
     expect(breederRes.statusCode).toEqual(200);
+    // Check that breeder matches known data
     const breeder = breederRes.body;
-    expect(breeder).toHaveProperty('id');
-    expect(breeder).toHaveProperty('firstname');
-    expect(breeder).toHaveProperty('lastname');
-    expect(breeder.id).toEqual(testDog.breederId);
+    const testBreeder = breeders.filter((b) => b.id === testDog.breederId)[0];
+    expect(breeder.id).toEqual(testBreeder.id);
+    expect(breeder.firstname).toEqual(testBreeder.firstname);
+    expect(breeder.lastname).toEqual(testBreeder.lastname);
     // Check bad request
     const badBreederRes = await request(app).get('/dogs/123456789/breeder');
     expect(badBreederRes.statusCode).toEqual(404);
