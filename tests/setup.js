@@ -4,7 +4,7 @@ import { sequelize } from '../src/database/models';
 // Set up the test database
 import testDatabaseSetup from './databaseSetup';
 
-beforeAll(async () => {
+beforeEach(async () => {
   await testDatabaseSetup();
 });
 

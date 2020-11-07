@@ -183,6 +183,31 @@ describe('PUT /dogs endpoints', () => {
 });
 
 /*
+ * DELETE
+ */
+describe('DELETE /dogs endpoint', () => {
+  test('Deletes a dog', async () => {
+    const testDog = randomDog();
+    const res = await request(app).delete(`/dogs/${testDog.id}`);
+    expect(res.statusCode).toEqual(200);
+    // Should get back a response with the deleted dog info
+    expect(res.body).toEqual(expect.objectContaining(testDog));
+    // Dog should not be in the database
+    const getRes = await request(app).get(`/dogs/${testDog.id}`);
+    expect(getRes.statusCode).toEqual(404);
+  });
+
+  test('Fails with bad ID', async () => {
+    const res = await request(app).delete(`/dogs/iamnotavalidid`);
+    // Expect a 404 response
+    expect(res.statusCode).toEqual(404);
+    // Database should still have all dogs
+    const getRes = await request(app).get(`/dogs`);
+    expect(getRes.body.length).toEqual(dogs.length);
+  });
+});
+
+/*
  * Helper functions
  */
 
