@@ -4,7 +4,7 @@ import app from '../src/server';
 
 // Tests assume database contains exact data as set up in databaseSetup.js
 // So directly import the data used, do compare!
-import { breeders, dogs } from './databaseSetup';
+import { breeders, dogs } from './setup/databaseSetup';
 
 /*
  * GET
@@ -14,7 +14,7 @@ describe('GET /dogs endpoints', () => {
     const res = await request(app).get('/dogs');
     expect(res.statusCode).toEqual(200);
     expect(res.body).toBeInstanceOf(Array);
-    expect(res.body.length).toEqual(5); // 5 dogs in test suite
+    expect(res.body.length).toEqual(dogs.length);
     // Check that a random dog has all fields
     const dog = randomFromArray(res.body);
     expect(dog).toBeInstanceOf(Object);

@@ -25,7 +25,13 @@ router.get('/:dogId/breeder', async (req, res) => {
   const dog = await req.context.models.Dog.findByPk(req.params.dogId);
   if (dog) {
     const breeder = await dog.getBreeder();
-    return breeder ? res.send(breeder) : `No breeder listed for ${dog.name}`;
+    return breeder
+      ? res.send(breeder)
+      : res
+          .status(404)
+          .send(
+            `(Status code ${res.statusCode}) No breeder listed for ${dog.name}`
+          );
   }
   return res
     .status(404)

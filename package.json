@@ -12,7 +12,7 @@
     "predev": "pg_ctl -D /usr/local/var/postgres restart -w",
     "dev": "nodemon -r dotenv/config --exec babel-node src/index.js",
     "postdev": "pg_ctl -D /usr/local/var/postgres stop -m smart",
-    "test": "jest",
+    "test": "jest --runInBand",
     "pretest:watch": "pg_ctl -D /usr/local/var/postgres restart -w",
     "test:watch": "npm run test -- --watch",
     "posttest:watch": "pg_ctl -D /usr/local/var/postgres stop -m smart"
@@ -47,7 +47,7 @@
       "dotenv/config"
     ],
     "setupFilesAfterEnv": [
-      "<rootDir>tests/setup.js"
+      "<rootDir>tests/setup/index.js"
     ]
   }
 }

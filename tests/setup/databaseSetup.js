@@ -1,4 +1,4 @@
-import models, { sequelize } from '../src/database/models';
+import models, { sequelize } from '../../src/database/models';
 
 const testDatabaseSetup = async () => {
   // Clear out the database, then populate it with pre-determined data
