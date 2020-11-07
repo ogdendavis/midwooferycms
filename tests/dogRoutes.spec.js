@@ -2,9 +2,12 @@
 import request from 'supertest';
 import app from '../src/server';
 
-// Tests assume database contains exact data as set up in databaseSetup.js
-// So directly import the data used, do compare!
-import { breeders, dogs } from './setup/databaseSetup';
+// Utils to bring in helpers and data from which database was created
+import utils from './setup/utils';
+
+// Variable for quick access to data from allDogs in utils
+// Capitalized to remind that this is the source of truth
+const Dogs = utils.allDogs();
 
 /*
  * GET
@@ -14,29 +17,18 @@ describe('GET /dogs endpoints', () => {
     const res = await request(app).get('/dogs');
     expect(res.statusCode).toEqual(200);
     expect(res.body).toBeInstanceOf(Array);
-    expect(res.body.length).toEqual(dogs.length);
-    // Check that a random dog has all fields
-    const dog = randomFromArray(res.body);
+    expect(res.body.length).toEqual(Dogs.length);
+    // Check that a random dog matches a known dog exactly
+    const dog = utils.randomFromArray(res.body);
     expect(dog).toBeInstanceOf(Object);
-    expect(dog).toEqual(
-      expect.objectContaining({
-        id: expect.anything(),
-        breed: expect.anything(),
-        color: expect.anything(),
-        name: expect.anything(),
-        weight: expect.anything(),
-        breederId: expect.anything(),
-        createdAt: expect.anything(),
-        updatedAt: expect.anything(),
-      })
-    );
+    expect(Dogs).toContainEqual(dog);
     //Check that a random known dog exists
-    const knownDog = randomDog();
-    expect(res.body).toContainEqual(expect.objectContaining(knownDog));
+    const testDog = utils.randomDog();
+    expect(res.body).toContainEqual(expect.objectContaining(testDog));
   });
 
   test('GET /dogs/:dogId', async () => {
-    const testDog = randomDog();
+    const testDog = utils.randomDog();
     // Test good data first
     const oneDogRes = await request(app).get(`/dogs/${testDog.id}`);
     const oneDog = oneDogRes.body;
@@ -48,12 +40,14 @@ describe('GET /dogs endpoints', () => {
   });
 
   test('GET /dogs/:dogId/breeder', async () => {
-    const testDog = randomDog();
+    const testDog = utils.randomDog();
     const breederRes = await request(app).get(`/dogs/${testDog.id}/breeder`);
     expect(breederRes.statusCode).toEqual(200);
     // Check that breeder matches known data
     const breeder = breederRes.body;
-    const testBreeder = breeders.filter((b) => b.id === testDog.breederId)[0];
+    const testBreeder = utils
+      .allBreeders()
+      .filter((b) => b.id === testDog.breederId)[0];
     expect(breeder.id).toEqual(testBreeder.id);
     expect(breeder.firstname).toEqual(testBreeder.firstname);
     expect(breeder.lastname).toEqual(testBreeder.lastname);
@@ -129,7 +123,7 @@ describe('POST /dogs endpoint', () => {
 
 describe('PUT /dogs endpoints', () => {
   test('Updates with valid input', async () => {
-    const dogToUpdate = randomDog();
+    const testDog = utils.randomDog();
     const dogUpdates = {
       name: 'Ziggy',
       weight: 999,
@@ -137,32 +131,28 @@ describe('PUT /dogs endpoints', () => {
       color: 'racing stripes',
       breederId: 'b3',
     };
-    const res = await request(app)
-      .put(`/dogs/${dogToUpdate.id}`)
-      .send(dogUpdates);
+    const res = await request(app).put(`/dogs/${testDog.id}`).send(dogUpdates);
     expect(res.statusCode).toEqual(200);
     // Correct fields logged as updated
     expect(res.body.updated).toEqual(Object.keys(dogUpdates));
     // And correct values in those fields
     expect(res.body.result).toEqual(
-      expect.objectContaining({ ...dogUpdates, id: dogToUpdate.id })
+      expect.objectContaining({ ...dogUpdates, id: testDog.id })
     );
   });
 
   test('Rejects change to dog ID', async () => {
-    const dogToUpdate = randomDog();
+    const testDog = utils.randomDog();
     const badUpdate = {
       id: 'dontchangemebro',
     };
-    const res = await request(app)
-      .put(`/dogs/${dogToUpdate.id}`)
-      .send(badUpdate);
+    const res = await request(app).put(`/dogs/${testDog.id}`).send(badUpdate);
     expect(res.statusCode).toEqual(400);
     expect(res.text).toEqual(expect.stringContaining('id'));
   });
 
   test('Extraneous or invalid changes cause entire request rejection', async () => {
-    const dogToUpdate = randomDog();
+    const testDog = utils.randomDog();
     const mixedUpdate = {
       name: 'Fred', // valid
       id: 'nopez', // field exists, but should be immutable
@@ -170,13 +160,13 @@ describe('PUT /dogs endpoints', () => {
     };
     // Test 'em all!
     const res1 = await request(app)
-      .put(`/dogs/${dogToUpdate.id}`)
+      .put(`/dogs/${testDog.id}`)
       .send(mixedUpdate);
     expect(res1.statusCode).toEqual(400);
     expect(res1.text).toEqual(expect.stringContaining('id fakezorz'));
     // Now withoutt ID
     const res2 = await request(app)
-      .put(`/dogs/${dogToUpdate.id}`)
+      .put(`/dogs/${testDog.id}`)
       .send({ name: mixedUpdate.name, fakies: mixedUpdate.fakezorz });
     expect(res2.statusCode).toEqual(400);
     expect(res2.text).toEqual(expect.stringContaining('fakies'));
@@ -188,7 +178,7 @@ describe('PUT /dogs endpoints', () => {
  */
 describe('DELETE /dogs endpoint', () => {
   test('Deletes a dog', async () => {
-    const testDog = randomDog();
+    const testDog = utils.randomDog();
     const res = await request(app).delete(`/dogs/${testDog.id}`);
     expect(res.statusCode).toEqual(200);
     // Should get back a response with the deleted dog info
@@ -204,23 +194,6 @@ describe('DELETE /dogs endpoint', () => {
     expect(res.statusCode).toEqual(404);
     // Database should still have all dogs
     const getRes = await request(app).get(`/dogs`);
-    expect(getRes.body.length).toEqual(dogs.length);
+    expect(getRes.body.length).toEqual(Dogs.length);
   });
 });
-
-/*
- * Helper functions
- */
-
-// Get a random item from an array
-const randomFromArray = (ar) => {
-  return ar[Math.floor(Math.random() * ar.length)];
-};
-
-const randomDog = () => {
-  return {
-    ...randomFromArray(dogs),
-    createdAt: expect.anything(),
-    updatedAt: expect.anything(),
-  };
-};
