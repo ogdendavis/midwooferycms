@@ -37,6 +37,7 @@ describe('GET /dogs endpoints', () => {
     // Now check a bad request
     const badDogRes = await request(app).get('/dogs/iamnotavalidid');
     expect(badDogRes.statusCode).toEqual(404);
+    expect(Dogs).not.toContainEqual(badDogRes.body);
   });
 
   test('GET /dogs/:dogId/breeder', async () => {

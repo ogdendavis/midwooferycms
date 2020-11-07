@@ -17,7 +17,11 @@ router.get('/:breederId', async (req, res) => {
   if (breeder) {
     return res.send(breeder);
   }
-  return res.send(`No breeder with ID ${req.params.breederId}`);
+  return res
+    .status(404)
+    .send(
+      `(Status code ${res.statusCode}) No breeder with ID ${req.params.breederId}`
+    );
 });
 
 // Get all of a breeder's dogs
@@ -27,11 +31,19 @@ router.get('/:breederId/dogs', async (req, res) => {
   );
   if (breeder) {
     const dogs = await breeder.getDogs();
-    return dogs
+    return dogs.length > 0
       ? res.send(dogs)
-      : `No dogs listed for breeder ${req.params.breederId}`;
+      : res
+          .status(204)
+          .send(
+            `(Status code ${res.statusCode}) No dogs listed for breeder ${req.params.breederId}`
+          );
   }
-  return res.send(`No breeder with ID ${req.params.breederId}`);
+  return res
+    .status(404)
+    .send(
+      `(Status code ${res.statusCode}) No breeder with ID ${req.params.breederId}`
+    );
 });
 
 // Create a breeder
