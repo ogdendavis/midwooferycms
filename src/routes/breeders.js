@@ -57,6 +57,17 @@ router.post('/', async (req, res) => {
           `(Status code ${res.statusCode}) Please enter a first and last name`
         );
     }
+    // If ID is provided, make sure it's unique
+    if (req.body.id) {
+      const existing = await req.context.models.Breeder.findByPk(req.body.id);
+      if (existing) {
+        return res
+          .status(400)
+          .send(
+            `(Status code ${res.statusCode}) A breeder with id ${req.body.id} already exists`
+          );
+      }
+    }
     // Generate an id, if not given, and create an object with the breeder info
     const id = req.body.id || uuidv4();
     const newBreeder = await req.context.models.Breeder.create({

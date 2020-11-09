@@ -113,6 +113,18 @@ describe('POST /breeders endpoint', () => {
     expect(getRes.statusCode).toEqual(404);
     expect(getRes.body).toEqual({});
   });
+
+  test('Rejects a request with already-used ID', async () => {
+    const testBreeder = utils.randomBreeder();
+    const dupeBreeder = {
+      id: testBreeder.id,
+      firstname: 'Elvis',
+      lastname: 'Presley',
+    };
+    const res = await request(app).post('/breeders').send(dupeBreeder);
+    expect(res.statusCode).toEqual(400);
+    expect(res.text).toEqual(expect.stringContaining(`id ${dupeBreeder.id}`));
+  });
 });
 
 /*

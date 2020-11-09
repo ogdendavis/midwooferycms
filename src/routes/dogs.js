@@ -42,12 +42,41 @@ router.get('/:dogId/breeder', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     // Check for required input
-    if (!req.body.name) {
+    if (!req.body.name || !req.body.breederId) {
+      const missing = [
+        !req.body.name && 'name',
+        !req.body.breederId && 'breederId',
+      ];
+
       return res
         .status(400)
         .send(
-          `(Status code ${res.statusCode}) You need to at least include a name to create a new dog`
+          `(Status code ${
+            res.statusCode
+          }) Dog not created. Missing required field(s): ${missing.join(' ')}`
         );
+    }
+    // Make sure breederId provided is valid
+    const breeder = await req.context.models.Breeder.findByPk(
+      req.body.breederId
+    );
+    if (!breeder) {
+      return res
+        .status(400)
+        .send(
+          `(Status code ${res.statusCode}) Invalid breederId: ${req.body.breederId}`
+        );
+    }
+    // Make sure ID (if provided) is unique
+    if (req.body.id) {
+      const existingDog = await req.context.models.Dog.findByPk(req.body.id);
+      if (existingDog) {
+        return res
+          .status(400)
+          .send(
+            `(Status code ${res.statusCode}) A dog already exists with id ${req.body.id}`
+          );
+      }
     }
     // Generate random ID for the new dog, if one not provided
     const id = req.body.id || uuidv4();

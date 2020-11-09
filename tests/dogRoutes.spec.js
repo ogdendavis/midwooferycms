@@ -84,9 +84,10 @@ describe('POST /dogs endpoint', () => {
     );
   });
 
-  test('Creates a dog from valid partial data', async () => {
+  test('Creates a dog from minimum required data', async () => {
     const partyDog = {
       name: 'Audi',
+      breederId: 'b3',
     };
     const res = await request(app).post('/dogs').send(partyDog);
     expect(res.statusCode).toEqual(201);
@@ -97,7 +98,7 @@ describe('POST /dogs endpoint', () => {
         color: '',
         name: partyDog.name,
         weight: 0,
-        breederId: null,
+        breederId: partyDog.breederId,
         createdAt: expect.anything(),
         updatedAt: expect.anything(),
       })
@@ -116,6 +117,48 @@ describe('POST /dogs endpoint', () => {
     // And the dog shouldn't have been created!
     const getRes = await request(app).get(`/dogs/${badDog.id}`);
     expect(getRes.statusCode).toEqual(404);
+  });
+
+  test('Rejects missing or invalid breederId', async () => {
+    // No Breeder ID provided
+    const noBID = {
+      id: 'bad1',
+      name: 'Lassie',
+      color: 'blue',
+      weight: 300,
+    };
+    const noRes = await request(app).post('/dogs').send(noBID);
+    expect(noRes.statusCode).toEqual(400);
+    expect(noRes.text).toEqual(expect.stringContaining('breederId'));
+
+    // Bad breeder ID
+    const badBID = {
+      ...noBID,
+      breederId:
+        'thisisanonsensestringthatshouldneverendupasabreederidandifitdoesitwillbreakthistest',
+    };
+    const badRes = await request(app).post('/dogs').send(badBID);
+    expect(badRes.statusCode).toEqual(400);
+    expect(badRes.text).toEqual(expect.stringContaining('breederId'));
+    expect(badRes.text).toEqual(expect.stringContaining(badBID.breederId));
+
+    // Confim dog not in database
+    const getRes = await request(app).get(`/dogs/${noBID.id}`);
+    expect(getRes.statusCode).toEqual(404);
+    expect(getRes.body).toEqual({});
+  });
+
+  test('Rejects a request with already-used ID', async () => {
+    const testDog = utils.randomDog();
+    const testBreeder = utils.randomBreeder();
+    const dupeDog = {
+      id: testDog.id,
+      name: 'Nopey',
+      breederId: testBreeder.id,
+    };
+    const res = await request(app).post('/dogs').send(dupeDog);
+    expect(res.statusCode).toEqual(400);
+    expect(res.text).toEqual(expect.stringContaining(`id ${dupeDog.id}`));
   });
 });
 
