@@ -65,7 +65,7 @@ router.post('/', async (req, res) => {
     return res.status(201).send(newDog);
   } catch (er) {
     return res
-      .status(400)
+      .status(500)
       .send(`(Status code ${res.statusCode}) Error processing request: ${er}`);
   }
 });
@@ -86,7 +86,7 @@ router.put('/:dogId', async (req, res) => {
 
   // Any invalid updates in the body should cancel the entire request
   // Remember what is updated, and what's invalid, to return useful message
-  let [badKeys, goodKeys] = [[], []];
+  const [badKeys, goodKeys] = [[], []];
   for (const key in req.body) {
     if (key === 'id' || !dog.hasOwnProperty(key)) {
       badKeys.push(key);

@@ -9,6 +9,10 @@ import utils from './setup/utils';
 // Capitalized to remind that this is the source of truth
 const Breeders = utils.allBreeders();
 
+/*
+ * GET
+ */
+
 describe('GET /breeders endpoints', () => {
   test('GET /breeders', async () => {
     const res = await request(app).get('/breeders');
@@ -59,5 +63,149 @@ describe('GET /breeders endpoints', () => {
     const badRes = await request(app).get('/breeders/nopezorz/dogs');
     expect(badRes.statusCode).toEqual(404);
     expect(badRes.text).toEqual(expect.stringContaining('No breeder with ID'));
+  });
+});
+
+/*
+ * POST
+ */
+
+describe('POST /breeders endpoint', () => {
+  test('Creates a breeder from valid data', async () => {
+    const data = {
+      id: 'b4',
+      firstname: 'Jane',
+      lastname: 'Lorna',
+      city: 'Houston',
+      state: 'LA',
+    };
+    const res = await request(app).post('/breeders').send(data);
+    expect(res.statusCode).toEqual(201);
+    expect(res.body).toEqual(utils.dataize(data));
+  });
+
+  test('Creates a breeder from valid partial data', async () => {
+    const data = {
+      firstname: 'Firsty',
+      lastname: 'McFirsterson',
+    };
+    // Just send the minimum -- first and last names
+    const res = await request(app).post('/breeders').send(data);
+    expect(res.statusCode).toEqual(201);
+    expect(res.body.firstname).toEqual(data.firstname);
+    expect(res.body.lastname).toEqual(data.lastname);
+    // Check that other fields were createdAt
+    expect(res.body.id).toBeDefined();
+    expect(res.body.state).toEqual('');
+    expect(res.body.city).toEqual('');
+  });
+
+  test('Fails if bad data sent', async () => {
+    const badData = {
+      id: 'idontexist',
+      firstname: 'Fred',
+      transport: 'footcar',
+    };
+    const res = await request(app).post('/breeders').send(badData);
+    expect(res.statusCode).toEqual(400);
+    // Make sure breeder wasn't created
+    const getRes = await request(app).get(`/breeders/${badData.id}`);
+    expect(getRes.statusCode).toEqual(404);
+    expect(getRes.body).toEqual({});
+  });
+});
+
+/*
+ * PUT
+ */
+
+describe('PUT /breeders endpoints', () => {
+  test('Should update a valid breeder with valid updtes', async () => {
+    const updates = {
+      firstname: 'Richard',
+      lastname: 'Incognito',
+      city: 'Anywhere',
+      state: 'USA',
+    };
+    const testBreeder = utils.randomBreeder();
+    const res = await request(app)
+      .put(`/breeders/${testBreeder.id}`)
+      .send(updates);
+    expect(res.statusCode).toEqual(200);
+    // Updated object should show all fields in data as being updated
+    expect(res.body.updated).toEqual(Object.keys(updates));
+    // Should have updated the correct ID
+    expect(res.body.result.id).toEqual(testBreeder.id);
+    // And the data should match!
+    for (const key in Object.keys(updates)) {
+      expect(res.body.result[key]).toEqual(updates[key]);
+    }
+    // Confirm that the data matches on a follow-up GET request
+    const getRes = await request(app).get(`/breeders/${testBreeder.id}`);
+    expect(getRes.body).toEqual(res.body.result);
+  });
+
+  test('Rejects attempted ID change', async () => {
+    const badUpdate = { id: 'bwahaha' };
+    const testBreeder = utils.randomBreeder();
+    const res = await request(app)
+      .put(`/breeders/${testBreeder.id}`)
+      .send(badUpdate);
+    expect(res.statusCode).toEqual(400);
+    expect(res.text).toEqual(expect.stringContaining('id'));
+  });
+
+  test('Any bad change invalidates entire update', async () => {
+    const mixedUpdate = {
+      city: 'Utopia', // valid
+      id: 'burninator', // should be immutable
+      favorite_color: 'blue', // doesn't exist
+    };
+    const testBreeder = utils.randomBreeder();
+    // Should reject with all sent
+    const res1 = await request(app)
+      .put(`/breeders/${testBreeder.id}`)
+      .send(mixedUpdate);
+    expect(res1.statusCode).toEqual(400);
+    expect(res1.text).toEqual(expect.stringContaining('id favorite_color'));
+    // Should reject without ID sent
+    const res2 = await request(app).put(`/breeders/${testBreeder.id}`).send({
+      city: mixedUpdate.city,
+      favorite_color: mixedUpdate.favorite_color,
+    });
+    expect(res2.statusCode).toEqual(400);
+    expect(res2.text).toEqual(expect.stringContaining('favorite_color'));
+    // Make sure city wasn't changed!
+    const getRes = await request(app).get(`/breeders/${testBreeder.id}`);
+    expect(getRes.body.city).not.toEqual(mixedUpdate.city);
+  });
+});
+
+/*
+ * DELETE
+ */
+
+describe('DELETE /dogs endpoint', () => {
+  test('Deletes a breeder', async () => {
+    const testBreeder = utils.randomBreeder();
+    const res = await request(app).delete(`/breeders/${testBreeder.id}`);
+    expect(res.statusCode).toEqual(200);
+    // Response should show that the correct breeder has been removed
+    expect(res.body).toEqual(testBreeder);
+    // We shouldn't be able to find the breeder with a GET request
+    const getRes = await request(app).get(`/breeders/${testBreeder.id}`);
+    expect(getRes.statusCode).toEqual(404);
+    expect(getRes.body).toEqual({});
+    // And we should have one less breeder overall
+    const getAllRes = await request(app).get('/breeders');
+    expect(getAllRes.body.length).toEqual(Breeders.length - 1);
+  });
+
+  test('Fails with bad ID', async () => {
+    const res = await request(app).delete('/breeders/bb8');
+    expect(res.statusCode).toEqual(404);
+    // GET should show all breeders
+    const getRes = await request(app).get('/breeders');
+    expect(getRes.body.length).toEqual(Breeders.length);
   });
 });

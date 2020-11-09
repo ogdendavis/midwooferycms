@@ -12,6 +12,7 @@ const Dogs = utils.allDogs();
 /*
  * GET
  */
+
 describe('GET /dogs endpoints', () => {
   test('GET /dogs', async () => {
     const res = await request(app).get('/dogs');
@@ -140,6 +141,9 @@ describe('PUT /dogs endpoints', () => {
     expect(res.body.result).toEqual(
       expect.objectContaining({ ...dogUpdates, id: testDog.id })
     );
+    // Triple-check with a GET request
+    const getRes = await request(app).get(`/dogs/${testDog.id}`);
+    expect(getRes.body).toEqual(res.body.result);
   });
 
   test('Rejects change to dog ID', async () => {
@@ -165,18 +169,22 @@ describe('PUT /dogs endpoints', () => {
       .send(mixedUpdate);
     expect(res1.statusCode).toEqual(400);
     expect(res1.text).toEqual(expect.stringContaining('id fakezorz'));
-    // Now withoutt ID
+    // Now without ID
     const res2 = await request(app)
       .put(`/dogs/${testDog.id}`)
       .send({ name: mixedUpdate.name, fakies: mixedUpdate.fakezorz });
     expect(res2.statusCode).toEqual(400);
     expect(res2.text).toEqual(expect.stringContaining('fakies'));
+    // Confirm that name wasn't changed
+    const getRes = await request(app).get(`/dogs/${testDog.id}`);
+    expect(getRes.body.name).not.toEqual(mixedUpdate.name);
   });
 });
 
 /*
  * DELETE
  */
+
 describe('DELETE /dogs endpoint', () => {
   test('Deletes a dog', async () => {
     const testDog = utils.randomDog();
@@ -187,6 +195,10 @@ describe('DELETE /dogs endpoint', () => {
     // Dog should not be in the database
     const getRes = await request(app).get(`/dogs/${testDog.id}`);
     expect(getRes.statusCode).toEqual(404);
+    expect(getRes.body).toEqual({});
+    // Confirm that dog isn't showing in all dogs list, either
+    const getAllRes = await request(app).get('/dogs');
+    expect(getAllRes.body.length).toEqual(Dogs.length - 1);
   });
 
   test('Fails with bad ID', async () => {
