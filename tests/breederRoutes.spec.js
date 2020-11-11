@@ -38,13 +38,10 @@ describe('GET /breeders endpoints', () => {
   });
 
   test('GET /breeders/:breederId/dogs for breeder with dogs', async () => {
-    // Get a breeder that we know to have dogs by working backwards from dog to breeder
-    const testBreederId = utils.randomDog().breederId;
-    const testBreeder = Breeders.filter((b) => b.id === testBreederId)[0];
+    // Get a breeder that we know to have dogs
+    const testBreeder = utils.randomBreederWithDogs();
     // Pull all dogs that are associated with the test breeder
-    const testDogs = utils
-      .allDogs()
-      .filter((d) => d.breederId === testBreederId);
+    const testDogs = utils.allDogsFromBreeder(testBreeder.id);
     // Check the database!
     const res = await request(app).get(`/breeders/${testBreeder.id}/dogs`);
     expect(res.statusCode).toEqual(200);
@@ -203,7 +200,7 @@ describe('DELETE /dogs endpoint', () => {
     const res = await request(app).delete(`/breeders/${testBreeder.id}`);
     expect(res.statusCode).toEqual(200);
     // Response should show that the correct breeder has been removed
-    expect(res.body).toEqual(testBreeder);
+    expect(res.body.breeder).toEqual(testBreeder);
     // We shouldn't be able to find the breeder with a GET request
     const getRes = await request(app).get(`/breeders/${testBreeder.id}`);
     expect(getRes.statusCode).toEqual(404);
@@ -219,5 +216,23 @@ describe('DELETE /dogs endpoint', () => {
     // GET should show all breeders
     const getRes = await request(app).get('/breeders');
     expect(getRes.body.length).toEqual(Breeders.length);
+  });
+
+  test('Breeder deletion also deletes associated dogs', async () => {
+    const testBreeder = utils.randomBreederWithDogs();
+    const testDogs = utils.allDogsFromBreeder(testBreeder.id);
+    const resB = await request(app).delete(`/breeders/${testBreeder.id}`);
+    // Check that breeder deletion returns dog data
+    expect(resB.body.dogs).toEqual(testDogs);
+    // Try to get all dogs from breeder -- since breeder is gone, should get 404
+    const resD = await request(app).get(`/breeders/${testBreeder.id}/dogs`);
+    expect(resD.statusCode).toEqual(404);
+    expect(resD.body).toEqual({});
+    // Try to get each individual dog -- they shouldn't be there!
+    for (const td of testDogs) {
+      const res = await request(app).get(`/dogs/${td.id}`);
+      expect(res.statusCode).toEqual(404);
+      expect(res.body).toEqual({});
+    }
   });
 });

@@ -13,8 +13,18 @@ const utils = {
   allDogs() {
     return dogs.map((d) => this.dataize(d));
   },
+  allDogsFromBreeder(bid) {
+    return dogs
+      .filter((d) => d.breederId === bid)
+      .map((bd) => this.dataize(bd));
+  },
   randomBreeder() {
     return this.dataize(this.randomFromArray(breeders));
+  },
+  randomBreederWithDogs() {
+    const breederId = this.randomDog().breederId;
+    const breeder = breeders.filter((b) => b.id === breederId)[0];
+    return this.dataize(breeder);
   },
   allBreeders() {
     return breeders.map((b) => this.dataize(b));

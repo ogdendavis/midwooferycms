@@ -135,10 +135,10 @@ router.put('/:breederId', async (req, res) => {
 
 // Delete a breeder by ID
 router.delete('/:breederId', async (req, res) => {
-  const breederRes = await req.context.models.Breeder.findByPk(
+  const breeder = await req.context.models.Breeder.findByPk(
     req.params.breederId
   );
-  if (!breederRes) {
+  if (!breeder) {
     return res
       .status(404)
       .send(
@@ -146,14 +146,18 @@ router.delete('/:breederId', async (req, res) => {
       );
   }
 
-  // Make a copy of the breeder to be deleted
-  const byeByeBreeder = await req.context.models.Breeder.findByPk(
-    req.params.breederId
-  );
+  // Get the dogs associated with the breeder -- they'll be deleted, too
+  const byeDogs = await breeder.getDogs();
+  if (byeDogs.length > 0) {
+    for (const d of byeDogs) {
+      req.context.models.Dog.destroy({ where: { id: d.id } });
+    }
+  }
+
   // Delete it!
   req.context.models.Breeder.destroy({ where: { id: req.params.breederId } });
   // Send back a copy of the deleted breeder to confirm
-  return res.send(byeByeBreeder);
+  return res.send({ breeder, dogs: byeDogs });
 });
 
 export default router;
