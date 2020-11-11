@@ -19,6 +19,10 @@ const dog = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         defaultValue: '',
       },
+      litterId: {
+        type: DataTypes.STRING,
+        defaultValue: '',
+      },
       name: {
         type: DataTypes.STRING,
         allowNull: false,
@@ -36,7 +40,6 @@ const dog = (sequelize, DataTypes) => {
 
   Dog.associate = (models) => {
     Dog.belongsTo(models.Breeder);
-    Dog.belongsTo(models.Litter);
   };
 
   return Dog;

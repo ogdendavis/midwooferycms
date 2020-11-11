@@ -11,6 +11,18 @@ const litter = (sequelize, DataTypes) => {
           notEmpty: true,
         },
       },
+      count: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0,
+      },
+      dam: {
+        type: DataTypes.JSON,
+        defaultValue: '{}',
+      },
+      sire: {
+        type: DataTypes.JSON,
+        defaultValue: '{}',
+      },
     },
     {
       paranoid: true,

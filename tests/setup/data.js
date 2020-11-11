@@ -22,6 +22,16 @@ const breeders = [
   },
 ];
 
+const litters = [
+  {
+    id: 'l1',
+    breederId: 'b2',
+    count: 4,
+    dam: { id: 'd2' },
+    sire: { name: 'Freckles' },
+  },
+];
+
 const dogs = [
   {
     id: 'd1',
@@ -30,6 +40,7 @@ const dogs = [
     color: 'black',
     weight: 60,
     breederId: 'b1',
+    litterId: '',
   },
   {
     id: 'd2',
@@ -38,6 +49,7 @@ const dogs = [
     color: 'merle',
     weight: 14,
     breederId: 'b2',
+    litterId: '',
   },
   {
     id: 'd3',
@@ -46,6 +58,7 @@ const dogs = [
     color: 'stabby',
     weight: 8,
     breederId: 'b2',
+    litterId: 'l1',
   },
   {
     id: 'd4',
@@ -54,6 +67,7 @@ const dogs = [
     color: 'parti',
     weight: 23,
     breederId: 'b2',
+    litterId: 'l1',
   },
   {
     id: 'd5',
@@ -62,7 +76,8 @@ const dogs = [
     color: 'apricot',
     weight: 29,
     breederId: 'b1',
+    litterId: '',
   },
 ];
 
-export { breeders, dogs };
+export { breeders, litters, dogs };
