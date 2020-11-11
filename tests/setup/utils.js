@@ -5,7 +5,12 @@ const utils = {
     return ar[Math.floor(Math.random() * ar.length)];
   },
   dataize(o) {
-    return { ...o, createdAt: expect.anything(), updatedAt: expect.anything() };
+    return {
+      ...o,
+      createdAt: expect.anything(),
+      updatedAt: expect.anything(),
+      deletedAt: expect.notUndefined(),
+    };
   },
   randomDog() {
     return this.dataize(this.randomFromArray(dogs));
