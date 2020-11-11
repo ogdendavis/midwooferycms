@@ -36,6 +36,7 @@ const dog = (sequelize, DataTypes) => {
 
   Dog.associate = (models) => {
     Dog.belongsTo(models.Breeder);
+    Dog.belongsTo(models.Litter);
   };
 
   return Dog;

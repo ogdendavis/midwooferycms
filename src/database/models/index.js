@@ -3,6 +3,7 @@ import Sequelize, { DataTypes } from 'sequelize';
 // import models
 import dog from './dog';
 import breeder from './breeder';
+import litter from './litter';
 
 // import config
 import sequelizeConfig from '../config';
@@ -23,6 +24,7 @@ const sequelize = new Sequelize(
 // Plug the models in to sequelize. Order is important (I think), for associations between models to make sense
 const models = {
   Breeder: breeder(sequelize, DataTypes),
+  Litter: litter(sequelize, DataTypes),
   Dog: dog(sequelize, DataTypes),
 };
 

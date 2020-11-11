@@ -35,6 +35,7 @@ const breeder = (sequelize, DataTypes) => {
 
   Breeder.associate = (models) => {
     Breeder.hasMany(models.Dog);
+    Breeder.hasMany(models.Litter);
   };
 
   return Breeder;

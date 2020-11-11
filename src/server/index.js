@@ -29,6 +29,7 @@ app.use((req, res, next) => {
 // Bring in routes
 app.use('/breeders', routes.breeders);
 app.use('/dogs', routes.dogs);
+app.use('/litters', routes.litters);
 
 // Export for implementation in src/index, as well as testing
 export default app;
