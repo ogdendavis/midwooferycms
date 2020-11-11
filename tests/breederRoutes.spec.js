@@ -17,12 +17,7 @@ describe('GET /breeders endpoints', () => {
   test('GET /breeders', async () => {
     const res = await request(app).get('/breeders');
     expect(res.statusCode).toEqual(200);
-    expect(res.body).toBeInstanceOf(Array);
-    expect(res.body.length).toEqual(Breeders.length);
-    // Test that a random breeder matches a known breeder exactly
-    const rando = utils.randomFromArray(res.body);
-    expect(rando).toBeInstanceOf(Object);
-    expect(Breeders).toContainEqual(rando);
+    expect(res.body).toEqual(Breeders);
   });
 
   test('GET /breeders/:breederId', async () => {

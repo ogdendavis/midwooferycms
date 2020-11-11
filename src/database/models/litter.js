@@ -23,6 +23,10 @@ const litter = (sequelize, DataTypes) => {
         type: DataTypes.JSON,
         defaultValue: '{}',
       },
+      pups: {
+        type: DataTypes.ARRAY(DataTypes.STRING),
+        defaultValue: [],
+      },
     },
     {
       paranoid: true,

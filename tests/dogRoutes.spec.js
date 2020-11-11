@@ -17,15 +17,7 @@ describe('GET /dogs endpoints', () => {
   test('GET /dogs', async () => {
     const res = await request(app).get('/dogs');
     expect(res.statusCode).toEqual(200);
-    expect(res.body).toBeInstanceOf(Array);
-    expect(res.body.length).toEqual(Dogs.length);
-    // Check that a random dog matches a known dog exactly
-    const dog = utils.randomFromArray(res.body);
-    expect(dog).toBeInstanceOf(Object);
-    expect(Dogs).toContainEqual(dog);
-    //Check that a random known dog exists
-    const testDog = utils.randomDog();
-    expect(res.body).toContainEqual(expect.objectContaining(testDog));
+    expect(res.body).toEqual(Dogs);
   });
 
   test('GET /dogs/:dogId', async () => {

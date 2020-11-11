@@ -1,4 +1,4 @@
-import { breeders, dogs } from './data';
+import { breeders, litters, dogs } from './data';
 
 const utils = {
   randomFromArray(ar) {
@@ -22,6 +22,20 @@ const utils = {
   },
   allBreeders() {
     return breeders.map((b) => this.dataize(b));
+  },
+  randomLitter() {
+    return this.dataize(this.randomFromArray(litters));
+  },
+  randomLitterWithPups() {
+    let testId = this.randomDog().litterId;
+    while (testId === '') {
+      testId = this.randomDog().litterId;
+    }
+    const litter = litters.filter((l) => l.id === testId)[0];
+    return this.dataize(litter);
+  },
+  allLitters() {
+    return litters.map((l) => this.dataize(l));
   },
   randomDog() {
     return this.dataize(this.randomFromArray(dogs));

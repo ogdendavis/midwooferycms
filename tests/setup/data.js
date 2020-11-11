@@ -29,6 +29,7 @@ const litters = [
     count: 4,
     dam: { id: 'd2' },
     sire: { name: 'Freckles' },
+    pups: ['d4', 'd3'],
   },
 ];
 
