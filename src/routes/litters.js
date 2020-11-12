@@ -51,4 +51,26 @@ router.get('/:litterId/pups', async (req, res) => {
     .send(`(Status code ${res.statusCode}) No pups found for this litter`);
 });
 
+// Get the breeder of a litter by id
+router.get('/:litterId/breeder', async (req, res) => {
+  const litter = await req.context.models.Litter.findByPk(req.params.litterId);
+  // Early return if litter isn't there
+  if (!litter) {
+    return res
+      .status(404)
+      .send(
+        `(Status code ${res.statusCode}) No litter with ID ${req.params.litterId}`
+      );
+  }
+  // Get the breeder
+  const breeder = await req.context.models.Breeder.findByPk(litter.breederId);
+  // Breeder should always exist, but just in case...
+  if (!breeder) {
+    return res
+      .status(404)
+      .send(`(Status code ${res.statusCode}) No breeder found for this litter`);
+  }
+  return res.send(breeder);
+});
+
 export default router;

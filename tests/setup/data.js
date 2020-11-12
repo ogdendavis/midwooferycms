@@ -27,9 +27,17 @@ const litters = [
     id: 'l1',
     breederId: 'b2',
     count: 4,
-    dam: { id: 'd2' },
-    sire: { name: 'Freckles' },
+    dam: { id: 'd2', name: 'Freyja' },
+    sire: { id: '', name: 'Freckles' },
     pups: ['d4', 'd3'],
+  },
+  {
+    id: 'l2',
+    breederId: 'b1',
+    count: 8,
+    dam: { id: '', name: 'Unicornia' },
+    sire: { id: 'd5', name: 'Cedric' },
+    pups: [],
   },
 ];
 
