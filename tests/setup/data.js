@@ -50,6 +50,7 @@ const dogs = [
     weight: 60,
     breederId: 'b1',
     litterId: '',
+    sex: 'f',
   },
   {
     id: 'd2',
@@ -59,6 +60,7 @@ const dogs = [
     weight: 14,
     breederId: 'b2',
     litterId: '',
+    sex: 'f',
   },
   {
     id: 'd3',
@@ -68,6 +70,7 @@ const dogs = [
     weight: 8,
     breederId: 'b2',
     litterId: 'l1',
+    sex: 'f',
   },
   {
     id: 'd4',
@@ -77,6 +80,7 @@ const dogs = [
     weight: 23,
     breederId: 'b2',
     litterId: 'l1',
+    sex: 'f',
   },
   {
     id: 'd5',
@@ -86,6 +90,7 @@ const dogs = [
     weight: 29,
     breederId: 'b1',
     litterId: '',
+    sex: 'm',
   },
 ];
 

@@ -28,6 +28,13 @@ const dog = (sequelize, DataTypes) => {
         allowNull: false,
         defaultValue: '',
       },
+      sex: {
+        type: DataTypes.STRING,
+        defaultValue: '',
+        validate: {
+          isIn: [['m', 'f', '']],
+        },
+      },
       weight: {
         type: DataTypes.INTEGER,
         defaultValue: 0,

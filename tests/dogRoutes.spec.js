@@ -64,6 +64,8 @@ describe('POST /dogs endpoint', () => {
       color: 'rainbow',
       weight: 1,
       breederId: 'b2',
+      litterId: 'l1',
+      sex: 'm',
     };
     const res = await request(app).post('/dogs').send(dogData);
     expect(res.statusCode).toEqual(201);
