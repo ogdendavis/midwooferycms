@@ -76,3 +76,126 @@ describe('GET /litters endpoints', () => {
     expect(res.text).toEqual(expect.stringContaining('No litter with ID'));
   });
 });
+
+/*
+ * POST
+ */
+
+describe('POST /litters endpoint', () => {
+  test('Creates a litter from full data', async () => {
+    const data = {
+      id: 'tl',
+      breederId: utils.randomBreeder().id,
+      count: 10,
+      dam: { id: utils.randomDog({ sex: 'f' }).id },
+      sire: { name: 'Al' },
+      pups: [],
+    };
+    const res = await request(app).post('/litters').send(data);
+    expect(res.statusCode).toEqual(201);
+    expect(res.body).toEqual(utils.dataize(data));
+  });
+
+  test('Generates a unique ID for newly created litter', async () => {
+    const data = {
+      breederId: utils.randomBreeder().id,
+      count: 12,
+      dam: { id: utils.randomDog({ sex: 'f' }).id },
+      sire: { name: 'Thomas' },
+      pups: [],
+    };
+    const res = await request(app).post('/litters').send(data);
+    expect(res.statusCode).toEqual(201);
+    const expectedLitter = { ...utils.dataize(data), id: expect.anything() };
+    expect(res.body).toEqual(expectedLitter);
+    // Confirm that ID is valid by grabbing the litter
+    const getRes = await request(app).get(`/litters/${res.body.id}`);
+    expect(getRes.statusCode).toEqual(200);
+    expect(getRes.body).toEqual(expectedLitter);
+  });
+
+  test('Creates a litter from minimum required data', async () => {
+    const data = {
+      breederId: utils.randomBreeder().id,
+      dam: { id: utils.randomDog({ sex: 'f' }).id },
+    };
+    const res = await request(app).post('/litters').send(data);
+    expect(res.statusCode).toEqual(201);
+    expect(res.body).toEqual(expect.objectContaining(data));
+  });
+
+  test('Rejects a litter without required data', async () => {
+    const data = {
+      sire: { name: 'Mr. Nopesies' },
+      count: 33,
+    };
+    const res = await request(app).post('/litters').send(data);
+    expect(res.statusCode).toEqual(400);
+    expect(res.body).toEqual({});
+    expect(res.text).toEqual(expect.stringContaining('breederId dam'));
+  });
+
+  test('Rejects a litter with invalid breederId', async () => {
+    const data = {
+      id: 'tlbadbreeder',
+      breederId: 'utils.randomBreeder().id',
+      count: 10,
+      dam: { name: 'Jane' },
+    };
+    const res = await request(app).post('/litters').send(data);
+    expect(res.statusCode).toEqual(400);
+    expect(res.body).toEqual({});
+    expect(res.text).toEqual(
+      expect.stringContaining(`Invalid breederId: ${data.breederId}`)
+    );
+  });
+
+  test('Rejects a litter with invalid dam information', async () => {
+    // Get a random valid breeder id to use in all requests
+    const breederId = utils.randomBreeder().id;
+    // Case for bad ID provided
+    const badId = {
+      breederId,
+      dam: { id: 'notanidatall' },
+    };
+    const badIdRes = await request(app).post('/litters').send(badId);
+    expect(badIdRes.statusCode).toEqual(400);
+    expect(badIdRes.body).toEqual({});
+    expect(badIdRes.text).toEqual(
+      expect.stringContaining(`No dog found with ID ${badId.dam.id}`)
+    );
+    // Case for ID of male dog provided
+    const maleId = {
+      breederId,
+      dam: { id: utils.randomDog({ sex: 'm' }).id },
+    };
+    const maleIdRes = await request(app).post('/litters').send(maleId);
+    expect(maleIdRes.statusCode).toEqual(400);
+    expect(maleIdRes.body).toEqual({});
+    expect(maleIdRes.text).toEqual(
+      expect.stringContaining(`Dog with ID ${maleId.dam.id} is male`)
+    );
+    // Case for bad name provided
+    const badName = {
+      breederId,
+      dam: { name: 8 },
+    };
+    const badNameRes = await request(app).post('/litters').send(badName);
+    expect(badNameRes.statusCode).toEqual(400);
+    expect(badNameRes.body).toEqual({});
+    expect(badNameRes.text).toEqual(
+      expect.stringContaining(
+        'Dam information should be an object containing at least one of a valid dog id or the name of a dog'
+      )
+    );
+    // Case for no dam info sent at all
+    const noInfo = {
+      breederId,
+      but: 'technicallythereissomeinfo',
+    };
+    const noInfoRes = await request(app).post('/litters').send(noInfo);
+    expect(noInfoRes.statusCode).toEqual(400);
+    expect(noInfoRes.body).toEqual({});
+    expect(noInfoRes.text).toEqual(expect.stringContaining('dam'));
+  });
+});

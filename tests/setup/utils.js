@@ -37,7 +37,12 @@ const utils = {
   allLitters() {
     return litters.map((l) => this.dataize(l));
   },
-  randomDog() {
+  randomDog(args) {
+    if (args) {
+      if (args.hasOwnProperty('sex')) {
+        return this.randomFromArray(dogs.filter((d) => d.sex === args.sex));
+      }
+    }
     return this.dataize(this.randomFromArray(dogs));
   },
   allDogs() {

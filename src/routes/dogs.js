@@ -82,12 +82,8 @@ router.post('/', async (req, res) => {
     const id = req.body.id || uuidv4();
     // Make the new dog, and add it to the database
     const newDog = await req.context.models.Dog.create({
-      id,
-      name: req.body.name,
-      ...(req.body.breed && { breed: req.body.breed }),
-      ...(req.body.color && { color: req.body.color }),
-      ...(req.body.weight && { weight: req.body.weight }),
-      ...(req.body.breederId && { breederId: req.body.breederId }),
+      ...req.body,
+      id, // last to overwrite, if needed
     });
 
     // Confirm by sending the new dog back to the user with status code indicating resource creation

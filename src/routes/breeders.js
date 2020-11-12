@@ -71,11 +71,8 @@ router.post('/', async (req, res) => {
     // Generate an id, if not given, and create an object with the breeder info
     const id = req.body.id || uuidv4();
     const newBreeder = await req.context.models.Breeder.create({
+      ...req.body,
       id,
-      ...(req.body.firstname && { firstname: req.body.firstname }),
-      ...(req.body.lastname && { lastname: req.body.lastname }),
-      ...(req.body.city && { city: req.body.city }),
-      ...(req.body.state && { state: req.body.state }),
     });
 
     // Send the newly created breeder back to confirm

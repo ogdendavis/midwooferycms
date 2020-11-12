@@ -73,4 +73,85 @@ router.get('/:litterId/breeder', async (req, res) => {
   return res.send(breeder);
 });
 
+// Create a new litter
+router.post('/', async (req, res) => {
+  // Check for required input
+  if (!req.body.breederId || !req.body.dam) {
+    const missing = [
+      !req.body.breederId && 'breederId',
+      !req.body.dam && 'dam',
+    ];
+    return res
+      .status(400)
+      .send(
+        `(Status code ${
+          res.statusCode
+        }) Litter not created. Missing required field(s): ${missing.join(' ')}`
+      );
+  }
+  // Confirm that breederId is valid
+  const breeder = await req.context.models.Breeder.findByPk(req.body.breederId);
+  if (!breeder) {
+    return res
+      .status(400)
+      .send(
+        `(Status code ${res.statusCode}) Litter not created. Invalid breederId: ${req.body.breederId}`
+      );
+  }
+  // Confirm that dam info is valid
+  if (req.body.dam.id) {
+    // Case for if an ID is provided
+    const damInDB = await req.context.models.Dog.findByPk(req.body.dam.id);
+    if (!damInDB) {
+      return res
+        .status(400)
+        .send(
+          `(Status code ${res.statusCode}) Litter not created. Invalid dam id: No dog found with ID ${req.body.dam.id}`
+        );
+    }
+    if (damInDB.sex === 'm') {
+      return res
+        .status(400)
+        .send(
+          `(Status code ${res.statusCode}) Litter not created. Dog with ID ${req.body.dam.id} is male, so cannot be dam of litter`
+        );
+    }
+  } else {
+    // If an ID is not provided, check to make sure that the dam object exists, and that it has a valid name
+    if (
+      !req.body.dam.name ||
+      typeof req.body.dam.name !== 'string' ||
+      req.body.dam.name.length < 2
+    ) {
+      return res
+        .status(400)
+        .send(
+          `(Status code ${res.statusCode}) Litter not created. Please provide valid dam information. Dam information should be an object containing at least one of a valid dog id or the name of a dog`
+        );
+    }
+  }
+  // We have the info, so now make the litter!
+  try {
+    const id = req.body.id || uuidv4();
+    const newLitter = await req.context.models.Litter.create({
+      ...req.body,
+      id,
+    });
+    return res.status(201).send(newLitter);
+  } catch (error) {
+    return res
+      .status(500)
+      .send({
+        message: `(Status code ${res.statusCode}) Error creating litter`,
+        error,
+      });
+  }
+  return res
+    .status(500)
+    .send({
+      message: `(Status code ${res.statusCode}) Error creating litter`,
+      error: 'unknown',
+    });
+});
+
 export default router;
