@@ -129,6 +129,20 @@ router.put('/:dogId', async (req, res) => {
       );
   }
 
+  // If breeder is being updated, make sure it's valid!
+  if (req.body.breederId) {
+    const breederRes = await req.context.models.Breeder.findByPk(
+      req.body.breederId
+    );
+    if (!breederRes) {
+      return res
+        .status(400)
+        .send(
+          `(Status code ${res.statusCode}) Can't update breederId: No breeder with ID ${req.body.breederId}`
+        );
+    }
+  }
+
   // Send the updates, and get back the updated dog
   const updatedDog = await req.context.models.Dog.update(req.body, {
     where: { id: req.params.dogId },

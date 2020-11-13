@@ -216,6 +216,15 @@ describe('PUT /dogs endpoints', () => {
     const getRes = await request(app).get(`/dogs/${testDog.id}`);
     expect(getRes.body.name).not.toEqual(mixedUpdate.name);
   });
+
+  test('Rejects update with invalid breederId', async () => {
+    const testDog = utils.randomDog();
+    const res = await request(app).put(`/dogs/${testDog.id}`).send({
+      breederId: 'imaginary',
+    });
+    expect(res.statusCode).toEqual(400);
+    expect(res.text).toEqual(expect.stringContaining('No breeder with ID'));
+  });
 });
 
 /*
