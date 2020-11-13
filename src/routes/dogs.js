@@ -125,7 +125,7 @@ router.put('/:dogId', async (req, res) => {
       .send(
         `(Status code ${
           res.statusCode
-        }) Attempted to update inalid fields: ${badKeys.join(' ')}`
+        }) Attempted to update inalid fields: ${badKeys.join(', ')}`
       );
   }
 

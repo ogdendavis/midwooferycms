@@ -116,7 +116,7 @@ router.put('/:breederId', async (req, res) => {
       .send(
         `(Status code ${
           res.statusCode
-        }) Attempted to update invalid fields: ${badKeys.join(' ')}`
+        }) Attempted to update invalid fields: ${badKeys.join(', ')}`
       );
   }
 

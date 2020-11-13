@@ -205,7 +205,7 @@ describe('PUT /dogs endpoints', () => {
       .put(`/dogs/${testDog.id}`)
       .send(mixedUpdate);
     expect(res1.statusCode).toEqual(400);
-    expect(res1.text).toEqual(expect.stringContaining('id fakezorz'));
+    expect(res1.text).toEqual(expect.stringContaining('id, fakezorz'));
     // Now without ID
     const res2 = await request(app)
       .put(`/dogs/${testDog.id}`)

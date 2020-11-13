@@ -171,7 +171,7 @@ describe('PUT /breeders endpoints', () => {
       .put(`/breeders/${testBreeder.id}`)
       .send(mixedUpdate);
     expect(res1.statusCode).toEqual(400);
-    expect(res1.text).toEqual(expect.stringContaining('id favorite_color'));
+    expect(res1.text).toEqual(expect.stringContaining('id, favorite_color'));
     // Should reject without ID sent
     const res2 = await request(app).put(`/breeders/${testBreeder.id}`).send({
       city: mixedUpdate.city,
