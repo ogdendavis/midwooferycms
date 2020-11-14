@@ -256,6 +256,21 @@ router.put('/:litterId', async (req, res) => {
     .send({ updated: goodKeys, result: updatedLitter[1][0] });
 });
 
+// Delete a litter by ID
+router.delete('/:litterId', async (req, res) => {
+  const litter = await req.context.models.Litter.findByPk(req.params.litterId);
+  if (!litter) {
+    return res
+      .status(404)
+      .send(
+        `(Status code ${res.statusCode}) No litter with ID ${req.params.litterId}`
+      );
+  }
+  // Delete the litter and send back a copy
+  req.context.models.Litter.destroy({ where: { id: req.params.litterId } });
+  return res.send(litter);
+});
+
 // Helper function to confirm sire/dam info is valid
 const isValidParentData = async (models, parent) => {
   // To confirm that names match, if we get both an ID and a name

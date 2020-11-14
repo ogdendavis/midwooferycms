@@ -69,13 +69,7 @@ describe('POST /dogs endpoint', () => {
     };
     const res = await request(app).post('/dogs').send(dogData);
     expect(res.statusCode).toEqual(201);
-    expect(res.body).toEqual(
-      expect.objectContaining({
-        ...dogData,
-        createdAt: expect.anything(),
-        updatedAt: expect.anything(),
-      })
-    );
+    expect(res.body).toEqual(utils.dataize(dogData));
   });
 
   test('Creates a dog from minimum required data', async () => {
@@ -237,7 +231,7 @@ describe('DELETE /dogs endpoint', () => {
     const res = await request(app).delete(`/dogs/${testDog.id}`);
     expect(res.statusCode).toEqual(200);
     // Should get back a response with the deleted dog info
-    expect(res.body).toEqual(expect.objectContaining(testDog));
+    expect(res.body).toEqual(testDog);
     // Dog should not be in the database
     const getRes = await request(app).get(`/dogs/${testDog.id}`);
     expect(getRes.statusCode).toEqual(404);

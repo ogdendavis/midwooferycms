@@ -431,7 +431,25 @@ describe('PUT /litters endpoints', () => {
  */
 
 describe('DELETE /litters endpoint', () => {
-  test('Removes litter entirely', async () => {});
+  test('Removes litter entirely', async () => {
+    const targetLitter = utils.randomLitter();
+    const res = await request(app).delete(`/litters/${targetLitter.id}`);
+    expect(res.statusCode).toEqual(200);
+    expect(res.body).toEqual(targetLitter);
+    // Shouldn't be able to GET now-removed litter
+    const getRes = await request(app).get(`/litters/${targetLitter.id}`);
+    expect(getRes.statusCode).toEqual(404);
+    expect(getRes.body).toEqual({});
+    expect(getRes.text).toEqual(expect.stringContaining('No litter with ID'));
+  });
 
-  test('Fails if given bad ID', async () => {});
+  test('Fails if given bad ID', async () => {
+    const res = await request(app).delete('/litters/junkid');
+    expect(res.statusCode).toEqual(404);
+    expect(res.body).toEqual({});
+    expect(res.text).toEqual(expect.stringContaining('No litter with ID'));
+    // Make sure we still have all litters!
+    const allRes = await request(app).get('/litters');
+    expect(allRes.body).toEqual(utils.allLitters());
+  });
 });
