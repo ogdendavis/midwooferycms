@@ -34,9 +34,9 @@ describe('GET /breeders endpoints', () => {
 
   test('GET /breeders/:breederId/dogs for breeder with dogs', async () => {
     // Get a breeder that we know to have dogs
-    const testBreeder = utils.randomBreederWithDogs();
+    const testBreeder = utils.randomBreeder({ hasDogs: true });
     // Pull all dogs that are associated with the test breeder
-    const testDogs = utils.allDogsFromBreeder(testBreeder.id);
+    const testDogs = utils.allDogs({ breederId: testBreeder.id });
     // Check the database!
     const res = await request(app).get(`/breeders/${testBreeder.id}/dogs`);
     expect(res.statusCode).toEqual(200);
@@ -214,8 +214,8 @@ describe('DELETE /dogs endpoint', () => {
   });
 
   test('Breeder deletion also deletes associated dogs', async () => {
-    const testBreeder = utils.randomBreederWithDogs();
-    const testDogs = utils.allDogsFromBreeder(testBreeder.id);
+    const testBreeder = utils.randomBreeder({ hasDogs: true });
+    const testDogs = utils.allDogs({ breederId: testBreeder.id });
     const resB = await request(app).delete(`/breeders/${testBreeder.id}`);
     // Check that breeder deletion returns dog data
     expect(resB.body.dogs).toEqual(testDogs);

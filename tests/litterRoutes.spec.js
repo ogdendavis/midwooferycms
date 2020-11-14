@@ -31,7 +31,7 @@ describe('GET /litters endpoints', () => {
   });
 
   test('GET /litters/:litterId/pups for litter with pups', async () => {
-    const testLitter = utils.randomLitterWithPups();
+    const testLitter = utils.randomLitter({ hasPups: true });
     const testPups = utils
       .allDogs()
       .filter((d) => d.litterId === testLitter.id);
