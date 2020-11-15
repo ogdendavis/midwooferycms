@@ -46,6 +46,28 @@ router.get('/:breederId/dogs', async (req, res) => {
     );
 });
 
+// Get all of a breeder's litters
+router.get('/:breederId/litters', async (req, res) => {
+  const breeder = await req.context.models.Breeder.findByPk(
+    req.params.breederId
+  );
+  if (breeder) {
+    const litters = await breeder.getLitters();
+    return litters.length > 0
+      ? res.send(litters)
+      : res
+          .status(204)
+          .send(
+            `(Status code ${res.statusCode}) No litters listed for breeder ${req.params.breederId}`
+          );
+  }
+  return res
+    .status(404)
+    .send(
+      `(Status code ${res.statusCode}) No breeder with ID ${req.params.breederId}`
+    );
+});
+
 // Create a breeder
 router.post('/', async (req, res) => {
   try {

@@ -13,8 +13,10 @@ const utils = {
     };
   },
 
-  randomBreeder(args = { hasDogs: null }) {
-    if (args.hasDogs !== null) {
+  randomBreeder(args = { hasDogs: null, hasLitters: null }) {
+    // only one parameter can be passed
+    // if hasDogs is specified
+    if (args.hasOwnProperty('hasDogs') && args.hasDogs !== null) {
       const idsWithDogs = [
         ...new Set(
           this.allDogs()
@@ -33,6 +35,25 @@ const utils = {
       return this.dataize(
         this.randomFromArray(
           args.hasDogs ? breedersWithDogs : breedersWithoutDogs
+        )
+      );
+    } else if (args.hasOwnProperty('hasLitters') && args.hasLitters !== null) {
+      const idsWithLitters = [
+        ...new Set(
+          this.allLitters()
+            .map((l) => l.breederId)
+            .filter((i) => i.length > 0)
+        ),
+      ];
+      const breedersWithLitters = breeders.filter((b) =>
+        idsWithLitters.includes(b.id)
+      );
+      const breedersWithoutLitters = breeders.filter(
+        (b) => !idsWithLitters.includes(b.id)
+      );
+      return this.dataize(
+        this.randomFromArray(
+          args.hasLitters ? breedersWithLitters : breedersWithoutLitters
         )
       );
     }

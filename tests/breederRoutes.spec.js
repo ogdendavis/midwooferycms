@@ -56,6 +56,31 @@ describe('GET /breeders endpoints', () => {
     expect(badRes.statusCode).toEqual(404);
     expect(badRes.text).toEqual(expect.stringContaining('No breeder with ID'));
   });
+
+  test('GET /breeders/:breederId/litters for breeder with litters', async () => {
+    const testBreeder = utils.randomBreeder({ hasLitters: true });
+    const testLitters = utils.allLitters({ breederId: testBreeder.id });
+    const res = await request(app).get(`/breeders/${testBreeder.id}/litters`);
+    expect(res.statusCode).toEqual(200);
+    expect(res.body).toEqual(testLitters);
+  });
+
+  test('GET /breeders/:breederId/litters for breeder without litters', async () => {
+    const testBreeder = utils.randomBreeder({ hasLitters: false });
+    const res = await request(app).get(`/breeders/${testBreeder.id}/litters`);
+    // Successful request, but no litters, so return 204
+    expect(res.statusCode).toEqual(204);
+    expect(res.body).toEqual({});
+  });
+
+  test('GET /breeders/:breederId/litters for bad breeder id', async () => {
+    const res = await request(app).get(
+      '/breeders/mynameisinigomontoya/litters'
+    );
+    expect(res.statusCode).toEqual(404);
+    expect(res.body).toEqual({});
+    expect(res.text).toEqual(expect.stringContaining('No breeder with ID'));
+  });
 });
 
 /*

@@ -28,8 +28,24 @@ test('randomBreeder respects hasDogs argument', () => {
         .filter((i) => i.length > 0)
     ),
   ];
+  // Check that breeder id is in appropriate list
   expect(breedersWithDogs).toContainEqual(yesDogs.id);
   expect(breedersWithDogs).not.toContainEqual(noDogs.id);
+});
+
+test('randomBreeder respects hasLitters argument', () => {
+  const noLitters = utils.randomBreeder({ hasLitters: false });
+  const yesLitters = utils.randomBreeder({ hasLitters: true });
+  const breedersWithLitters = [
+    ...new Set(
+      utils
+        .allLitters()
+        .map((l) => l.breederId)
+        .filter((i) => i.length > 0)
+    ),
+  ];
+  expect(breedersWithLitters).toContainEqual(yesLitters.id);
+  expect(breedersWithLitters).not.toContainEqual(noLitters.id);
 });
 
 test('allLitters respects breederId argument', () => {

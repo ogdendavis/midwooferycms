@@ -35,7 +35,10 @@ const breeder = (sequelize, DataTypes) => {
 
   Breeder.associate = (models) => {
     Breeder.hasMany(models.Dog);
-    Breeder.hasMany(models.Litter);
+    // When getter functions are created under the hood, the default pluralization of litter is litter. In the context of litters of puppies, this is incorrect. Fix it so that the getter function is the logical getLitters instead of the confusing getLitter
+    Breeder.hasMany(models.Litter, {
+      as: { plural: 'Litters', singular: 'Litter' },
+    });
   };
 
   return Breeder;

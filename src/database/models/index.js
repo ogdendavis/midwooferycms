@@ -21,7 +21,7 @@ const sequelize = new Sequelize(
   }
 );
 
-// Plug the models in to sequelize. Order is important (I think), for associations between models to make sense
+// Plug the models in to sequelize
 const models = {
   Breeder: breeder(sequelize, DataTypes),
   Litter: litter(sequelize, DataTypes),
