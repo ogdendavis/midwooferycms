@@ -16,18 +16,29 @@ test('randomLitter respects hasPups argument', () => {
   expect(yesPups.pups.length).toBeGreaterThan(0);
 });
 
+// Lists of breeders with dogs and litters, for randomBreeder tests
+// These are arrays with breederIds
+const breedersWithDogs = [
+  ...new Set(
+    utils
+      .allDogs()
+      .map((d) => d.breederId)
+      .filter((i) => i.length > 0)
+  ),
+];
+const breedersWithLitters = [
+  ...new Set(
+    utils
+      .allLitters()
+      .map((l) => l.breederId)
+      .filter((i) => i.length > 0)
+  ),
+];
+
 test('randomBreeder respects hasDogs argument', () => {
   // Remember, all dogs have breeders, but not all breeders have dogs
   const noDogs = utils.randomBreeder({ hasDogs: false });
   const yesDogs = utils.randomBreeder({ hasDogs: true });
-  const breedersWithDogs = [
-    ...new Set(
-      utils
-        .allDogs()
-        .map((d) => d.breederId)
-        .filter((i) => i.length > 0)
-    ),
-  ];
   // Check that breeder id is in appropriate list
   expect(breedersWithDogs).toContainEqual(yesDogs.id);
   expect(breedersWithDogs).not.toContainEqual(noDogs.id);
@@ -36,16 +47,35 @@ test('randomBreeder respects hasDogs argument', () => {
 test('randomBreeder respects hasLitters argument', () => {
   const noLitters = utils.randomBreeder({ hasLitters: false });
   const yesLitters = utils.randomBreeder({ hasLitters: true });
-  const breedersWithLitters = [
-    ...new Set(
-      utils
-        .allLitters()
-        .map((l) => l.breederId)
-        .filter((i) => i.length > 0)
-    ),
-  ];
   expect(breedersWithLitters).toContainEqual(yesLitters.id);
   expect(breedersWithLitters).not.toContainEqual(noLitters.id);
+});
+
+test('randomBreeder respects both hasDogs and hasLitters arguments', () => {
+  const yesDogYesLitter = utils.randomBreeder({
+    hasDogs: true,
+    hasLitters: true,
+  });
+  expect(breedersWithLitters).toContainEqual(yesDogYesLitter.id);
+  expect(breedersWithDogs).toContainEqual(yesDogYesLitter.id);
+  const noDogNoLitter = utils.randomBreeder({
+    hasDogs: false,
+    hasLitters: false,
+  });
+  expect(breedersWithLitters).not.toContainEqual(noDogNoLitter.id);
+  expect(breedersWithDogs).not.toContainEqual(noDogNoLitter.id);
+  const yesDogNoLitter = utils.randomBreeder({
+    hasDogs: true,
+    hasLitters: false,
+  });
+  expect(breedersWithLitters).not.toContainEqual(yesDogNoLitter.id);
+  expect(breedersWithDogs).toContainEqual(yesDogNoLitter.id);
+  const noDogYesLitter = utils.randomBreeder({
+    hasDogs: false,
+    hasLitters: true,
+  });
+  expect(breedersWithLitters).toContainEqual(noDogYesLitter.id);
+  expect(breedersWithDogs).not.toContainEqual(noDogYesLitter.id);
 });
 
 test('allLitters respects breederId argument', () => {

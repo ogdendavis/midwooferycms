@@ -90,7 +90,7 @@ describe('GET /breeders endpoints', () => {
 describe('POST /breeders endpoint', () => {
   test('Creates a breeder from valid data', async () => {
     const data = {
-      id: 'b4',
+      id: 'imaginativenewid',
       firstname: 'Jane',
       lastname: 'Lorna',
       city: 'Houston',

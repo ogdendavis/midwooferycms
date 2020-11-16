@@ -14,8 +14,9 @@ const utils = {
   },
 
   randomBreeder(args = { hasDogs: null, hasLitters: null }) {
-    // only one parameter can be passed
-    // if hasDogs is specified
+    // Start with all breeders -- dataized!
+    let pool = this.allBreeders();
+    // Filter pool if hasDogs has been passed
     if (args.hasOwnProperty('hasDogs') && args.hasDogs !== null) {
       const idsWithDogs = [
         ...new Set(
@@ -26,18 +27,14 @@ const utils = {
             })
         ),
       ];
-      const breedersWithDogs = breeders.filter((b) =>
-        idsWithDogs.includes(b.id)
-      );
-      const breedersWithoutDogs = breeders.filter(
+      const breedersWithDogs = pool.filter((b) => idsWithDogs.includes(b.id));
+      const breedersWithoutDogs = pool.filter(
         (b) => !idsWithDogs.includes(b.id)
       );
-      return this.dataize(
-        this.randomFromArray(
-          args.hasDogs ? breedersWithDogs : breedersWithoutDogs
-        )
-      );
-    } else if (args.hasOwnProperty('hasLitters') && args.hasLitters !== null) {
+      pool = args.hasDogs ? breedersWithDogs : breedersWithoutDogs;
+    }
+    // Filter pool if hasLitters has been passed
+    if (args.hasOwnProperty('hasLitters') && args.hasLitters !== null) {
       const idsWithLitters = [
         ...new Set(
           this.allLitters()
@@ -45,19 +42,15 @@ const utils = {
             .filter((i) => i.length > 0)
         ),
       ];
-      const breedersWithLitters = breeders.filter((b) =>
+      const breedersWithLitters = pool.filter((b) =>
         idsWithLitters.includes(b.id)
       );
-      const breedersWithoutLitters = breeders.filter(
+      const breedersWithoutLitters = pool.filter(
         (b) => !idsWithLitters.includes(b.id)
       );
-      return this.dataize(
-        this.randomFromArray(
-          args.hasLitters ? breedersWithLitters : breedersWithoutLitters
-        )
-      );
+      pool = args.hasLitters ? breedersWithLitters : breedersWithoutLitters;
     }
-    return this.dataize(this.randomFromArray(breeders));
+    return this.randomFromArray(pool);
   },
   allBreeders() {
     return breeders.map((b) => this.dataize(b));
