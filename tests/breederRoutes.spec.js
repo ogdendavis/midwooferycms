@@ -255,4 +255,22 @@ describe('DELETE /dogs endpoint', () => {
       expect(res.body).toEqual({});
     }
   });
+
+  test('Breeder deletion also deletes associated litters', async () => {
+    const testBreeder = utils.randomBreeder({ hasLitters: true });
+    const testLitters = utils.allLitters({ breederId: testBreeder.id });
+    const resB = await request(app).delete(`/breeders/${testBreeder.id}`);
+    // Check that deletion return includes litter data
+    expect(resB.body.litters).toEqual(testLitters);
+    // Try to get all litters from breeder -- since breeder is deleted, should get 404
+    const resL = await request(app).get(`/breeders/${testBreeder.id}/litters`);
+    expect(resL.statusCode).toEqual(404);
+    expect(resL.body).toEqual({});
+    // Check litters endpoints, too
+    for (const tl of testLitters) {
+      const res = await request(app).get(`/litters/${tl.id}`);
+      expect(res.statusCode).toEqual(404);
+      expect(res.body).toEqual({});
+    }
+  });
 });

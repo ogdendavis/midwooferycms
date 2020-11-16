@@ -168,15 +168,21 @@ router.delete('/:breederId', async (req, res) => {
   // Get the dogs associated with the breeder -- they'll be deleted, too
   const byeDogs = await breeder.getDogs();
   if (byeDogs.length > 0) {
-    for (const d of byeDogs) {
-      req.context.models.Dog.destroy({ where: { id: d.id } });
-    }
+    req.context.models.Dog.destroy({ where: { id: byeDogs.map((d) => d.id) } });
+  }
+
+  // And delete associated litters, too
+  const byeLitters = await breeder.getLitters();
+  if (byeLitters.length > 0) {
+    req.context.models.Litter.destroy({
+      where: { id: byeLitters.map((l) => l.id) },
+    });
   }
 
   // Delete it!
   req.context.models.Breeder.destroy({ where: { id: req.params.breederId } });
   // Send back a copy of the deleted breeder to confirm
-  return res.send({ breeder, dogs: byeDogs });
+  return res.send({ breeder, dogs: byeDogs, litters: byeLitters });
 });
 
 export default router;
