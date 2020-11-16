@@ -63,7 +63,7 @@ router.get('/:litterId/breeder', async (req, res) => {
       );
   }
   // Get the breeder
-  const breeder = await req.context.models.Breeder.findByPk(litter.breederId);
+  const breeder = await litter.getBreeder();
   // Breeder should always exist, but just in case...
   if (!breeder) {
     return res
