@@ -70,42 +70,82 @@ router.get('/:breederId/litters', async (req, res, next) => {
 
 // Create a breeder
 router.post('/', async (req, res, next) => {
-  try {
-    // Check for required fields
-    if (!req.body.firstname || !req.body.lastname) {
+  // Check for required fields
+  if (!req.body.firstname || !req.body.lastname) {
+    return res
+      .status(400)
+      .send(
+        `(Status code ${res.statusCode}) Please enter a first and last name`
+      );
+  }
+  // If ID is provided, make sure it's unique
+  if (req.body.id) {
+    const existing = await req.context.models.Breeder.findByPk(
+      req.body.id
+    ).catch(next);
+    if (existing) {
       return res
         .status(400)
         .send(
-          `(Status code ${res.statusCode}) Please enter a first and last name`
+          `(Status code ${res.statusCode}) A breeder with id ${req.body.id} already exists`
         );
     }
-    // If ID is provided, make sure it's unique
-    if (req.body.id) {
-      const existing = await req.context.models.Breeder.findByPk(
-        req.body.id
-      ).catch(next);
-      if (existing) {
-        return res
-          .status(400)
-          .send(
-            `(Status code ${res.statusCode}) A breeder with id ${req.body.id} already exists`
-          );
-      }
-    }
-    // Generate an id, if not given, and create an object with the breeder info
-    const id = req.body.id || uuidv4();
-    const newBreeder = await req.context.models.Breeder.create({
-      ...req.body,
-      id,
-    }).catch(next);
-
-    // Send the newly created breeder back to confirm
-    return res.status(201).send(newBreeder);
-  } catch (er) {
-    return res
-      .status(500)
-      .send(`(Status code ${res.statusCode}) Error processing request: ${er}`);
   }
+  // Generate an id, if not given, and create an object with the breeder info
+  const id = req.body.id || uuidv4();
+  const newBreeder = await req.context.models.Breeder.create({
+    ...req.body,
+    id,
+  }).catch(next);
+
+  // Send the newly created breeder back to confirm
+  return res.status(201).send(newBreeder);
+});
+
+// Restore a previously deleted breeder
+router.post('/:breederId/restore', async (req, res, next) => {
+  // Check for an active breeder with the ID
+  const activeBreeder = await req.context.models.Breeder.findByPk(
+    req.params.breederId
+  ).catch(next);
+  if (activeBreeder) {
+    return res
+      .status(405)
+      .send(
+        `(Status code ${res.statusCode}) Breeder with ID ${req.params.breederId} is already active`
+      );
+  }
+  // Check for deleted breeder
+  const breeder = await req.context.models.Breeder.findByPk(
+    req.params.breederId,
+    { paranoid: false }
+  ).catch(next);
+  if (!breeder) {
+    return res
+      .status(404)
+      .send(
+        `(Status code ${res.statusCode}) No breeder with ID ${req.params.breederId} found in deleted breeders`
+      );
+  }
+  // We now have a breeder to restore!
+  await breeder.restore();
+  // Get dogs and litters to restore, as well
+  const dogs = await req.context.models.Dog.findAll({
+    where: { breederId: req.params.breederId },
+    paranoid: false,
+  });
+  for (const d of dogs) {
+    await d.restore();
+  }
+  const litters = await req.context.models.Litter.findAll({
+    where: { breederId: req.params.breederId },
+    paranoid: false,
+  });
+  for (const l of litters) {
+    await l.restore();
+  }
+
+  return res.status(201).send({ breeder, dogs, litters });
 });
 
 // Update a breeder by ID

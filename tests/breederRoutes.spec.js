@@ -87,7 +87,7 @@ describe('GET /breeders endpoints', () => {
  * POST
  */
 
-describe('POST /breeders endpoint', () => {
+describe('POST /breeders endpoints', () => {
   test('Creates a breeder from valid data', async () => {
     const data = {
       id: 'imaginativenewid',
@@ -141,6 +141,66 @@ describe('POST /breeders endpoint', () => {
     const res = await request(app).post('/breeders').send(dupeBreeder);
     expect(res.statusCode).toEqual(400);
     expect(res.text).toEqual(expect.stringContaining(`id ${dupeBreeder.id}`));
+  });
+
+  // Endpoint to restore a deleted breeder, plus associated dogs/litters
+  test('POST /breeders/:breederId/restore restores deleted breeder', async () => {
+    // Get a known breeder with litters and dogs
+    const testBreeder = utils.randomBreeder({
+      hasDogs: true,
+      hasLitters: true,
+    });
+    // Get copies of the litters and dogs, too
+    const testLitters = utils.allLitters({ breederId: testBreeder.id });
+    const testDogs = utils.allDogs({ breederId: testBreeder.id });
+    // Delete the breeder and quickly confirm via status codes
+    const deleteRes = await request(app).delete(`/breeders/${testBreeder.id}`);
+    expect(deleteRes.statusCode).toEqual(200);
+    // Now, undelete the breeder!
+    const res = await request(app).post(`/breeders/${testBreeder.id}/restore`);
+    expect(res.statusCode).toEqual(201);
+    expect(res.body.breeder).toEqual(testBreeder);
+    expect(res.body.dogs).toEqual(testDogs);
+    expect(res.body.litters).toEqual(testLitters);
+    // And double-check with quick GETs
+    const getRes = await request(app).get(`/breeders/${testBreeder.id}`);
+    expect(getRes.statusCode).toEqual(200);
+    const getDogRes = await request(app).get(
+      `/breeders/${testBreeder.id}/dogs`
+    );
+    expect(getDogRes.statusCode).toEqual(200);
+    const getLitterRes = await request(app).get(
+      `/breeders/${testBreeder.id}/litters`
+    );
+    expect(getLitterRes.statusCode).toEqual(200);
+    // Make sure dogs and litters are back at their respective endpoints
+    const recheckDogRes = await request(app).get(
+      `/dogs/${utils.randomFromArray(testDogs).id}`
+    );
+    expect(recheckDogRes.statusCode).toEqual(200);
+    expect(testDogs).toContainEqual(recheckDogRes.body);
+    const recheckLitterRes = await request(app).get(
+      `/litters/${utils.randomFromArray(testLitters).id}`
+    );
+    expect(recheckLitterRes.statusCode).toEqual(200);
+    expect(testLitters).toContainEqual(recheckLitterRes.body);
+  });
+
+  test('POST /breeders/:breederId/restore ignores active breeder', async () => {
+    const testBreeder = utils.randomBreeder();
+    const res = await request(app).post(`/breeders/${testBreeder.id}/restore`);
+    expect(res.statusCode).toEqual(405);
+    expect(res.text).toEqual(
+      expect.stringContaining(
+        `Breeder with ID ${testBreeder.id} is already active`
+      )
+    );
+  });
+
+  test('POST /breeders/:breederId/restore rejects bad id', async () => {
+    const res = await request(app).post(`/breeders/wakkawakkawakka/restore`);
+    expect(res.statusCode).toEqual(404);
+    expect(res.text).toEqual(expect.stringContaining(`No breeder with ID`));
   });
 });
 
