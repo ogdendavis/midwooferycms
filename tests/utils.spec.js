@@ -9,11 +9,31 @@ test('randomDog respects sex argument', () => {
   expect(female.sex).toEqual('f');
 });
 
+test('randomDog respects fromLitter argument', () => {
+  const noLitter = utils.randomDog({ fromLitter: false });
+  const yesLitter = utils.randomDog({ fromLitter: true });
+  const litters = utils.allLitters();
+  const pups = [];
+  for (const l of litters) {
+    for (const p of l.pups) {
+      pups.push(p);
+    }
+  }
+  expect(pups).toContainEqual(yesLitter.id);
+  expect(pups).not.toContainEqual(noLitter.id);
+});
+
 test('randomLitter respects hasPups argument', () => {
   const noPups = utils.randomLitter({ hasPups: false });
   const yesPups = utils.randomLitter({ hasPups: true });
   expect(noPups.pups).toEqual([]);
   expect(yesPups.pups.length).toBeGreaterThan(0);
+});
+
+test('randomLitter respects pupId argument', () => {
+  const dog = utils.randomDog({ fromLitter: true });
+  const litter = utils.randomLitter({ pupId: dog.id });
+  expect(dog.litterId).toEqual(litter.id);
 });
 
 // Lists of breeders with dogs and litters, for randomBreeder tests

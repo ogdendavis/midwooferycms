@@ -56,25 +56,30 @@ const utils = {
     return breeders.map((b) => this.dataize(b));
   },
 
-  randomLitter(args = { hasPups: null }) {
-    if (args.hasPups) {
-      let testId = this.randomDog().litterId;
-      // If dog has no litter listed, litterId will be empty string
-      while (testId === '') {
-        testId = this.randomDog().litterId;
-      }
-      const litter = litters.filter((l) => l.id === testId)[0];
-      return this.dataize(litter);
-    }
-    if (args.hasPups === false) {
-      return this.dataize(
-        this.randomFromArray(litters.filter((l) => l.pups.length === 0))
+  randomLitter(args = { hasPups: null, pupId: null }) {
+    let pool = this.allLitters();
+    if (args.hasOwnProperty('hasPups') && args.hasPups !== null) {
+      const idsWithPups = [
+        ...new Set(
+          this.allDogs()
+            .map((d) => d.litterId)
+            .filter((i) => i.length > 0)
+        ),
+      ];
+      const littersWithPups = pool.filter((l) => idsWithPups.includes(l.id));
+      const littersWithoutPups = pool.filter(
+        (l) => !idsWithPups.includes(l.id)
       );
+      pool = args.hasPups ? littersWithPups : littersWithoutPups;
     }
-    return this.dataize(this.randomFromArray(litters));
+    if (args.hasOwnProperty('pupId') && args.pupId !== null) {
+      // We're only looking for one litter, because dogs can only be born to one litter
+      pool = pool.filter((l) => l.pups.includes(args.pupId));
+    }
+    return this.randomFromArray(pool);
   },
-  allLitters(args = { breederId: false }) {
-    if (args.breederId) {
+  allLitters(args = { breederId: null }) {
+    if (args.hasOwnProperty('breederId') && args.breederId !== null) {
       return litters
         .filter((l) => l.breederId === args.breederId)
         .map((fl) => this.dataize(fl));
@@ -82,11 +87,26 @@ const utils = {
     return litters.map((l) => this.dataize(l));
   },
 
-  randomDog(args = { sex: false }) {
-    if (args.sex) {
-      return this.randomFromArray(dogs.filter((d) => d.sex === args.sex));
+  randomDog(args = { sex: null, fromLitter: null }) {
+    let pool = this.allDogs();
+    if (args.hasOwnProperty('sex') && args.sex !== null) {
+      pool = pool.filter((d) => d.sex === args.sex);
     }
-    return this.dataize(this.randomFromArray(dogs));
+    if (args.hasOwnProperty('fromLitter') && args.fromLitter !== null) {
+      const idsFromLitter = [
+        ...new Set(
+          this.allLitters()
+            .map((l) => l.pups)
+            .flat()
+        ),
+      ];
+      const dogsFromLitter = pool.filter((d) => idsFromLitter.includes(d.id));
+      const dogsNotFromLitter = pool.filter(
+        (d) => !idsFromLitter.includes(d.id)
+      );
+      pool = args.fromLitter ? dogsFromLitter : dogsNotFromLitter;
+    }
+    return this.randomFromArray(pool);
   },
   allDogs(args = { breederId: false }) {
     if (args.breederId) {
