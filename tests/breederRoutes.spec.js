@@ -144,7 +144,7 @@ describe('POST /breeders endpoints', () => {
   });
 
   // Endpoint to restore a deleted breeder, plus associated dogs/litters
-  test('POST /breeders/:breederId/restore restores deleted breeder', async () => {
+  test('POST /breeders/:breederId/restore restores deleted breeder with dogs & litters', async () => {
     // Get a known breeder with litters and dogs
     const testBreeder = utils.randomBreeder({
       hasDogs: true,
@@ -184,6 +184,23 @@ describe('POST /breeders endpoints', () => {
     );
     expect(recheckLitterRes.statusCode).toEqual(200);
     expect(testLitters).toContainEqual(recheckLitterRes.body);
+  });
+
+  test('POST /breeders/:breederId/restore restores deleted breeder with no dogs or litters', async () => {
+    const testBreeder = utils.randomBreeder({
+      hasDogs: false,
+      hasLitters: false,
+    });
+    const deleteRes = await request(app).delete(`/breeders/${testBreeder.id}`);
+    expect(deleteRes.statusCode).toEqual(200);
+    const res = await request(app).post(`/breeders/${testBreeder.id}/restore`);
+    expect(res.statusCode).toEqual(201);
+    expect(res.body.breeder).toEqual(testBreeder);
+    expect(res.body.dogs).toEqual([]);
+    expect(res.body.litters).toEqual([]);
+    const getRes = await request(app).get(`/breeders/${testBreeder.id}`);
+    expect(getRes.statusCode).toEqual(200);
+    expect(getRes.body).toEqual(testBreeder);
   });
 
   test('POST /breeders/:breederId/restore ignores active breeder', async () => {
