@@ -5,14 +5,16 @@ const router = Router();
 
 // Get basic info on all litters
 // As model grows, needs to be refined down to basic stats. Should probably eventually be eliminated altogether
-router.get('/', async (req, res) => {
-  const litters = await req.context.models.Litter.findAll();
+router.get('/', async (req, res, next) => {
+  const litters = await req.context.models.Litter.findAll().catch(next);
   return res.send(litters);
 });
 
 // Get one litter by id
-router.get('/:litterId', async (req, res) => {
-  const litter = await req.context.models.Litter.findByPk(req.params.litterId);
+router.get('/:litterId', async (req, res, next) => {
+  const litter = await req.context.models.Litter.findByPk(
+    req.params.litterId
+  ).catch(next);
   if (litter) {
     return res.send(litter);
   }
@@ -24,9 +26,11 @@ router.get('/:litterId', async (req, res) => {
 });
 
 // Get the listed puppies of a litter by id
-router.get('/:litterId/pups', async (req, res) => {
+router.get('/:litterId/pups', async (req, res, next) => {
   // First, grab the indicated litter
-  const litter = await req.context.models.Litter.findByPk(req.params.litterId);
+  const litter = await req.context.models.Litter.findByPk(
+    req.params.litterId
+  ).catch(next);
   // Early return if litter isn't there
   if (!litter) {
     return res
@@ -39,7 +43,7 @@ router.get('/:litterId/pups', async (req, res) => {
   if (litter.pups.length > 0) {
     const pups = await req.context.models.Dog.findAll({
       where: { litterId: req.params.litterId },
-    });
+    }).catch(next);
     // Check if the pups are actually there...
     if (pups) {
       return res.send(pups);
@@ -52,8 +56,10 @@ router.get('/:litterId/pups', async (req, res) => {
 });
 
 // Get the breeder of a litter by id
-router.get('/:litterId/breeder', async (req, res) => {
-  const litter = await req.context.models.Litter.findByPk(req.params.litterId);
+router.get('/:litterId/breeder', async (req, res, next) => {
+  const litter = await req.context.models.Litter.findByPk(
+    req.params.litterId
+  ).catch(next);
   // Early return if litter isn't there
   if (!litter) {
     return res
@@ -63,7 +69,7 @@ router.get('/:litterId/breeder', async (req, res) => {
       );
   }
   // Get the breeder
-  const breeder = await litter.getBreeder();
+  const breeder = await litter.getBreeder().catch(next);
   // Breeder should always exist, but just in case...
   if (!breeder) {
     return res
@@ -74,7 +80,7 @@ router.get('/:litterId/breeder', async (req, res) => {
 });
 
 // Create a new litter
-router.post('/', async (req, res) => {
+router.post('/', async (req, res, next) => {
   // Check for required input
   if (!req.body.breederId || !req.body.dam) {
     const missing = [
@@ -90,7 +96,9 @@ router.post('/', async (req, res) => {
       );
   }
   // Confirm that breederId is valid
-  const breeder = await req.context.models.Breeder.findByPk(req.body.breederId);
+  const breeder = await req.context.models.Breeder.findByPk(
+    req.body.breederId
+  ).catch(next);
   if (!breeder) {
     return res
       .status(400)
@@ -101,7 +109,9 @@ router.post('/', async (req, res) => {
   // Confirm that dam info is valid
   if (req.body.dam.id) {
     // Case for if an ID is provided
-    const damInDB = await req.context.models.Dog.findByPk(req.body.dam.id);
+    const damInDB = await req.context.models.Dog.findByPk(
+      req.body.dam.id
+    ).catch(next);
     if (!damInDB) {
       return res
         .status(400)
@@ -131,30 +141,19 @@ router.post('/', async (req, res) => {
     }
   }
   // We have the info, so now make the litter!
-  try {
-    const id = req.body.id || uuidv4();
-    const newLitter = await req.context.models.Litter.create({
-      ...req.body,
-      id,
-    });
-    return res.status(201).send(newLitter);
-  } catch (error) {
-    return res.status(500).send({
-      message: `(Status code ${res.statusCode}) Error creating litter`,
-      error,
-    });
-  }
-  return res.status(500).send({
-    message: `(Status code ${res.statusCode}) Error creating litter`,
-    error: 'unknown',
-  });
+  const id = req.body.id || uuidv4();
+  const newLitter = await req.context.models.Litter.create({
+    ...req.body,
+    id,
+  }).catch(next);
+  return res.status(201).send(newLitter);
 });
 
 // Update a litter by id
-router.put('/:litterId', async (req, res) => {
+router.put('/:litterId', async (req, res, next) => {
   const litterRes = await req.context.models.Litter.findByPk(
     req.params.litterId
-  );
+  ).catch(next);
   if (!litterRes) {
     return res
       .status(404)
@@ -188,7 +187,7 @@ router.put('/:litterId', async (req, res) => {
   if (req.body.breederId) {
     const breederRes = await req.context.models.Breeder.findByPk(
       req.body.breederId
-    );
+    ).catch(next);
     if (!breederRes) {
       return res
         .status(400)
@@ -210,14 +209,14 @@ router.put('/:litterId', async (req, res) => {
   // Dam
   if (
     req.body.dam &&
-    !(await isValidParentData(req.context.models, req.body.dam))
+    !(await isValidParentData(req.context.models, req.body.dam).catch(next))
   ) {
     invalidFields.push('dam');
   }
   // Sire
   if (
     req.body.sire &&
-    !(await isValidParentData(req.context.models, req.body.sire))
+    !(await isValidParentData(req.context.models, req.body.sire).catch(next))
   ) {
     invalidFields.push('sire');
   }
@@ -227,7 +226,11 @@ router.put('/:litterId', async (req, res) => {
   }
   // If it is an array, we need to confirm that it contains valid IDs
   else if (req.body.pups && req.body.pups.length > 0) {
-    if (!(await isValidArrayOfIDs(req.context.models.Dog, req.body.pups))) {
+    if (
+      !(await isValidArrayOfIDs(req.context.models.Dog, req.body.pups).catch(
+        next
+      ))
+    ) {
       invalidFields.push('pups');
     }
   }
@@ -248,7 +251,7 @@ router.put('/:litterId', async (req, res) => {
   const updatedLitter = await req.context.models.Litter.update(req.body, {
     where: { id: req.params.litterId },
     returning: true,
-  });
+  }).catch(next);
 
   // Send what was updated, and the dog info (surfaced)
   return res
@@ -257,8 +260,10 @@ router.put('/:litterId', async (req, res) => {
 });
 
 // Delete a litter by ID
-router.delete('/:litterId', async (req, res) => {
-  const litter = await req.context.models.Litter.findByPk(req.params.litterId);
+router.delete('/:litterId', async (req, res, next) => {
+  const litter = await req.context.models.Litter.findByPk(
+    req.params.litterId
+  ).catch(next);
   if (!litter) {
     return res
       .status(404)

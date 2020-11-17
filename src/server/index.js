@@ -31,5 +31,10 @@ app.use('/breeders', routes.breeders);
 app.use('/dogs', routes.dogs);
 app.use('/litters', routes.litters);
 
+// Handle errors -- 4 args tells Express this is an error handler
+app.use((error, req, res, next) => {
+  return res.status(500).send({ error: error.toString() });
+});
+
 // Export for implementation in src/index, as well as testing
 export default app;

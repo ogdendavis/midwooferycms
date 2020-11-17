@@ -4,16 +4,16 @@ import { v4 as uuidv4 } from 'uuid';
 const router = Router();
 
 // Get all breeders
-router.get('/', async (req, res) => {
-  const breeders = await req.context.models.Breeder.findAll();
+router.get('/', async (req, res, next) => {
+  const breeders = await req.context.models.Breeder.findAll().catch(next);
   return res.send(breeders);
 });
 
 // Get one breeder by id
-router.get('/:breederId', async (req, res) => {
+router.get('/:breederId', async (req, res, next) => {
   const breeder = await req.context.models.Breeder.findByPk(
     req.params.breederId
-  );
+  ).catch(next);
   if (breeder) {
     return res.send(breeder);
   }
@@ -25,12 +25,12 @@ router.get('/:breederId', async (req, res) => {
 });
 
 // Get all of a breeder's dogs
-router.get('/:breederId/dogs', async (req, res) => {
+router.get('/:breederId/dogs', async (req, res, next) => {
   const breeder = await req.context.models.Breeder.findByPk(
     req.params.breederId
-  );
+  ).catch(next);
   if (breeder) {
-    const dogs = await breeder.getDogs();
+    const dogs = await breeder.getDogs().catch(next);
     return dogs.length > 0
       ? res.send(dogs)
       : res
@@ -47,12 +47,12 @@ router.get('/:breederId/dogs', async (req, res) => {
 });
 
 // Get all of a breeder's litters
-router.get('/:breederId/litters', async (req, res) => {
+router.get('/:breederId/litters', async (req, res, next) => {
   const breeder = await req.context.models.Breeder.findByPk(
     req.params.breederId
-  );
+  ).catch(next);
   if (breeder) {
-    const litters = await breeder.getLitters();
+    const litters = await breeder.getLitters().catch(next);
     return litters.length > 0
       ? res.send(litters)
       : res
@@ -69,7 +69,7 @@ router.get('/:breederId/litters', async (req, res) => {
 });
 
 // Create a breeder
-router.post('/', async (req, res) => {
+router.post('/', async (req, res, next) => {
   try {
     // Check for required fields
     if (!req.body.firstname || !req.body.lastname) {
@@ -81,7 +81,9 @@ router.post('/', async (req, res) => {
     }
     // If ID is provided, make sure it's unique
     if (req.body.id) {
-      const existing = await req.context.models.Breeder.findByPk(req.body.id);
+      const existing = await req.context.models.Breeder.findByPk(
+        req.body.id
+      ).catch(next);
       if (existing) {
         return res
           .status(400)
@@ -95,7 +97,7 @@ router.post('/', async (req, res) => {
     const newBreeder = await req.context.models.Breeder.create({
       ...req.body,
       id,
-    });
+    }).catch(next);
 
     // Send the newly created breeder back to confirm
     return res.status(201).send(newBreeder);
@@ -107,10 +109,10 @@ router.post('/', async (req, res) => {
 });
 
 // Update a breeder by ID
-router.put('/:breederId', async (req, res) => {
+router.put('/:breederId', async (req, res, next) => {
   const breederRes = await req.context.models.Breeder.findByPk(
     req.params.breederId
-  );
+  ).catch(next);
   if (!breederRes) {
     return res
       .status(404)
@@ -146,17 +148,17 @@ router.put('/:breederId', async (req, res) => {
   const updatedBreeder = await req.context.models.Breeder.update(req.body, {
     where: { id: req.params.breederId },
     returning: true,
-  });
+  }).catch(next);
 
   // Surface actual data in returned object from update, and send it back to confirm
   return res.send({ updated: goodKeys, result: updatedBreeder[1][0] });
 });
 
 // Delete a breeder by ID
-router.delete('/:breederId', async (req, res) => {
+router.delete('/:breederId', async (req, res, next) => {
   const breeder = await req.context.models.Breeder.findByPk(
     req.params.breederId
-  );
+  ).catch(next);
   if (!breeder) {
     return res
       .status(404)
@@ -168,7 +170,9 @@ router.delete('/:breederId', async (req, res) => {
   // Get the dogs associated with the breeder -- they'll be deleted, too
   const byeDogs = await breeder.getDogs();
   if (byeDogs.length > 0) {
-    req.context.models.Dog.destroy({ where: { id: byeDogs.map((d) => d.id) } });
+    req.context.models.Dog.destroy({
+      where: { id: byeDogs.map((d) => d.id) },
+    }).catch(next);
   }
 
   // And delete associated litters, too
@@ -176,7 +180,7 @@ router.delete('/:breederId', async (req, res) => {
   if (byeLitters.length > 0) {
     req.context.models.Litter.destroy({
       where: { id: byeLitters.map((l) => l.id) },
-    });
+    }).catch(next);
   }
 
   // Delete it!
