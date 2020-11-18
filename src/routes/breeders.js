@@ -79,7 +79,7 @@ router.post('/', async (req, res, next) => {
       );
   }
   // If ID is provided, make sure it's unique
-  if (req.body.id) {
+  if (req.body.hasOwnProperty('id')) {
     const existing = await req.context.models.Breeder.findByPk(
       req.body.id
     ).catch(next);

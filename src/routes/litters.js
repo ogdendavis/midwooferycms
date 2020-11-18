@@ -107,7 +107,7 @@ router.post('/', async (req, res, next) => {
       );
   }
   // Confirm that dam info is valid
-  if (req.body.dam.id) {
+  if (req.body.dam.hasOwnProperty('id')) {
     // Case for if an ID is provided
     const damInDB = await req.context.models.Dog.findByPk(
       req.body.dam.id
@@ -184,7 +184,7 @@ router.put('/:litterId', async (req, res, next) => {
   }
 
   // If bad breederId provided, we'll get a database error due to foreign key constraint
-  if (req.body.breederId) {
+  if (req.body.hasOwnProperty('breederId')) {
     const breederRes = await req.context.models.Breeder.findByPk(
       req.body.breederId
     ).catch(next);
@@ -221,11 +221,11 @@ router.put('/:litterId', async (req, res, next) => {
     invalidFields.push('sire');
   }
   // Pups
-  if (req.body.pups && req.body.pups.constructor !== Array) {
+  if (req.body.hasOwnProperty('pups') && req.body.pups.constructor !== Array) {
     invalidFields.push('pups');
   }
   // If it is an array, we need to confirm that it contains valid IDs
-  else if (req.body.pups && req.body.pups.length > 0) {
+  else if (req.body.hasOwnProperty('pups') && req.body.pups.length > 0) {
     if (
       !(await isValidArrayOfIDs(req.context.models.Dog, req.body.pups).catch(
         next

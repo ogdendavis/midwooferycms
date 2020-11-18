@@ -71,7 +71,7 @@ router.post('/', async (req, res, next) => {
       );
   }
   // Make sure ID (if provided) is unique
-  if (req.body.id) {
+  if (req.body.hasOwnProperty('id')) {
     const existingDog = await req.context.models.Dog.findByPk(
       req.body.id
     ).catch(next);
@@ -132,7 +132,7 @@ router.put('/:dogId', async (req, res, next) => {
   }
 
   // If breeder is being updated, make sure it's valid!
-  if (req.body.breederId) {
+  if (req.body.hasOwnProperty('breederId')) {
     const breederRes = await req.context.models.Breeder.findByPk(
       req.body.breederId
     ).catch(next);
