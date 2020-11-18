@@ -144,6 +144,32 @@ router.put('/:dogId', async (req, res, next) => {
         );
     }
   }
+  // If litterId is being updated, make the appropriate changes to the litter(s)
+  if (req.body.hasOwnProperty('litterId')) {
+    // Remove from old litter first
+    const oldLitter = await req.context.models.Litter.findByPk(dog.litterId);
+    if (oldLitter) {
+      await oldLitter.update({
+        pups: oldLitter.pups.filter((p) => p !== dog.id),
+      });
+    }
+    // If the dog is being reassigned to a new litter, update that
+    if (req.body.litterId !== '') {
+      const newLitter = await req.context.models.Litter.findByPk(
+        req.body.litterId
+      );
+      // Reject the update if new litterId isn't valid
+      if (!newLitter) {
+        return res
+          .status(400)
+          .send(
+            `(Status code ${res.statusCode}) Can't update litterId: No litter with ID ${req.body.breederId}`
+          );
+      }
+      // Add the dog's id to the new litter's pups array
+      await newLitter.update({ pups: newLitter.pups.concat([dog.id]) });
+    }
+  }
 
   // Send the updates, and get back the updated dog
   const updatedDog = await req.context.models.Dog.update(req.body, {

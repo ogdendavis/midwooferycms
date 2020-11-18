@@ -55,7 +55,7 @@ describe('GET /dogs endpoints', () => {
  * POST
  */
 
-describe('POST /dogs endpoint', () => {
+describe('POST /dogs endpoints', () => {
   test('Creates a dog from valid data', async () => {
     const dogData = {
       id: 'ud',
@@ -148,6 +148,32 @@ describe('POST /dogs endpoint', () => {
     expect(res.statusCode).toEqual(400);
     expect(res.text).toEqual(expect.stringContaining(`id ${dupeDog.id}`));
   });
+
+  test('POST /dogs/:dogId/restore restores deleted dog with litter', async () => {
+    // const testDog = utils.randomDog(fromLitter: true);
+    // const deleteRes = await request(app).delete(`/dogs/${testDog.id}`);
+    // expect(deleteRes.statusCode).toEqual(200);
+    // // Dog should be gone from litter
+    // const litterRes = await request(app).get(`/litters/${testDog.litterId}`);
+    // expect(litterRes.body.pups).not.toContainEqual(testDog.id);
+    // // And from the breeder
+    // const breederRes = await request(app).get(`/breeders/${testDog.breederId}/dogs`);
+    // expect(breederRes.body).not.toContainEqual(testDog);
+    // // Now ressurect the dog!
+    // const res = await request(app).post(`/dogs/${testdog.id}/restore`);
+    // expect(res.statusCode).toEqual(201);
+    // expect(res.body).toEqual(testDog);
+    // // Dog should now show up in breeder's dogs listing
+    // const breederRes = await request(app).get(`/breeders/${testDog.breederId}/dogs`);
+    // expect(breederRes.body).toContainEqual(testDog);
+    // // All dogs have breeders!
+    // // Remember to test that shows up in breeder/dogs
+  });
+
+  test('POST /dogs/:dogId/restore restores deleted dog without litter', async () => {});
+
+  test('POST /dogs/:dogId/restore ignores active dog', async () => {});
+  test('POST /dogs/:dogId/restore rejects bad id', async () => {});
 });
 
 /*
@@ -175,6 +201,51 @@ describe('PUT /dogs endpoints', () => {
     // Triple-check with a GET request
     const getRes = await request(app).get(`/dogs/${testDog.id}`);
     expect(getRes.body).toEqual(res.body.result);
+  });
+
+  test('Adding litterId adds dog to litter pup list', async () => {
+    const testLitter = utils.randomLitter();
+    const testDog = utils.randomDog({ fromLitter: false });
+    const update = {
+      litterId: testLitter.id,
+    };
+    // Make and confirm the update
+    const res = await request(app).put(`/dogs/${testDog.id}`).send(update);
+    expect(res.statusCode).toEqual(200);
+    expect(res.body.result).toEqual({ ...testDog, ...update });
+    // Get and check the litter
+    const lRes = await request(app).get(`/litters/${testLitter.id}`);
+    expect(lRes.body.pups).toContainEqual(testDog.id);
+  });
+
+  test('Removing litterId removes dog from litter pup list', async () => {
+    const testDog = utils.randomDog({ fromLitter: true });
+    const testLitter = utils.randomLitter({ pupId: testDog.id });
+    const update = {
+      litterId: '',
+    };
+    const res = await request(app).put(`/dogs/${testDog.id}`).send(update);
+    expect(res.statusCode).toEqual(200);
+    expect(res.body.result).toEqual({ ...testDog, ...update });
+    const lRes = await request(app).get(`/litters/${testLitter.id}`);
+    expect(lRes.body.pups).not.toContainEqual(testDog.id);
+  });
+
+  test('Changing litterId removes from old and adds to new pup lists', async () => {
+    // Get a dog from a known litter, and change it to a known litter with no dogs
+    const testDog = utils.randomDog({ fromLitter: true });
+    const testLitter = utils.randomLitter({ pupId: testDog.id });
+    const targetLitter = utils.randomLitter({ hasPups: false });
+    const update = {
+      litterId: targetLitter.id,
+    };
+    const res = await request(app).put(`/dogs/${testDog.id}`).send(update);
+    expect(res.statusCode).toEqual(200);
+    expect(res.body.result).toEqual({ ...testDog, ...update });
+    const oldLitterRes = await request(app).get(`/litters/${testLitter.id}`);
+    expect(oldLitterRes.body.pups).not.toContainEqual(testDog.id);
+    const newLitterRes = await request(app).get(`/litters/${targetLitter.id}`);
+    expect(newLitterRes.body.pups).toContainEqual(testDog.id);
   });
 
   test('Rejects change to dog ID', async () => {
@@ -240,6 +311,10 @@ describe('DELETE /dogs endpoint', () => {
     const getAllRes = await request(app).get('/dogs');
     expect(getAllRes.body.length).toEqual(Dogs.length - 1);
   });
+
+  test('Removes dog from associated litter', async () => {});
+
+  test('Removes dog from breeder dog list', async () => {});
 
   test('Fails with bad ID', async () => {
     const res = await request(app).delete(`/dogs/iamnotavalidid`);
