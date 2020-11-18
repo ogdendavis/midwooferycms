@@ -81,7 +81,7 @@ describe('GET /litters endpoints', () => {
  * POST
  */
 
-describe('POST /litters endpoint', () => {
+describe('POST /litters endpoints', () => {
   test('Creates a litter from full data', async () => {
     const data = {
       id: 'tl',
@@ -241,6 +241,62 @@ describe('POST /litters endpoint', () => {
     expect(noInfoRes.statusCode).toEqual(400);
     expect(noInfoRes.body).toEqual({});
     expect(noInfoRes.text).toEqual(expect.stringContaining('dam'));
+  });
+
+  test('/:litterId/restore endpoint restores deleted litter', async () => {
+    const testLitter = utils.randomLitter();
+    const dRes = await request(app).delete(`/litters/${testLitter.id}`);
+    expect(dRes.statusCode).toEqual(200);
+    const res = await request(app).post(`/litters/${testLitter.id}/restore`);
+    expect(res.statusCode).toEqual(201);
+    const gRes = await request(app).get(`/litters/${testLitter.id}`);
+    expect(gRes.statusCode).toEqual(200);
+    expect(gRes.body).toEqual(testLitter);
+  });
+
+  test('/:litterId/restore endpoint updates litterId for pups', async () => {
+    const testLitter = utils.randomLitter({ hasPups: true });
+    const dRes = await request(app).delete(`/litters/${testLitter.id}`);
+    expect(dRes.statusCode).toEqual(200);
+    const res = await request(app).post(`/litters/${testLitter.id}/restore`);
+    expect(res.statusCode).toEqual(201);
+    // Removal of litterId tested in DELETE below, so assume it was correctly removed on deletion, and just test that it was put back on restoration
+    for (const p of testLitter.pups) {
+      const pRes = await request(app).get(`/dogs/${p}`);
+      expect(pRes.statusCode).toEqual(200);
+      expect(pRes.body.litterId).toEqual(testLitter.id);
+    }
+  });
+
+  test('/:litterId/restore endpoint adds litter back to breeder list', async () => {
+    const testLitter = utils.randomLitter();
+    const dRes = await request(app).delete(`/litters/${testLitter.id}`);
+    expect(dRes.statusCode).toEqual(200);
+    const res = await request(app).post(`/litters/${testLitter.id}/restore`);
+    expect(res.statusCode).toEqual(201);
+    // Removal of litter from breeder list tested in DELETE below, so assume that went properly and just test re-adding on litter resetoration
+    const bRes = await request(app).get(
+      `/breeders/${testLitter.breederId}/litters`
+    );
+    expect(bRes.statusCode).toEqual(200);
+    expect(bRes.body).toContainEqual(testLitter);
+  });
+
+  test('/:litterId/restore endpoint ignores active litters', async () => {
+    const testLitter = utils.randomLitter();
+    const res = await request(app).post(`/litters/${testLitter.id}/restore`);
+    expect(res.statusCode).toEqual(405);
+    expect(res.text).toEqual(
+      expect.stringContaining(
+        `Litter with ID ${testLitter.id} is already active`
+      )
+    );
+  });
+
+  test('/:litterId/restore endpoint fails with bad litterId', async () => {
+    const res = await request(app).post('/litters/notalitter/restore');
+    expect(res.statusCode).toEqual(404);
+    expect(res.text).toEqual(expect.stringContaining('No litter with ID'));
   });
 });
 
@@ -495,6 +551,16 @@ describe('DELETE /litters endpoint', () => {
       const pRes = await request(app).get(`/dogs/${pup}`);
       expect(pRes.body.litterId).toEqual('');
     }
+  });
+
+  test('Removes litter from breeder list', async () => {
+    const testLitter = utils.randomLitter();
+    const res = await request(app).delete(`/litters/${testLitter.id}`);
+    expect(res.statusCode).toEqual(200);
+    const bRes = await request(app).get(
+      `/breeders/${testLitter.breederId}/litters`
+    );
+    expect(bRes.body).not.toContainEqual(testLitter);
   });
 
   test('Fails if given bad ID', async () => {
