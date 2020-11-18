@@ -324,7 +324,16 @@ describe('DELETE /dogs endpoint', () => {
     expect(lRes.body.pups).not.toContainEqual(testDog.id);
   });
 
-  test('Removes dog from breeder dog list', async () => {});
+  test('Removes dog from breeder dog list', async () => {
+    // All dogs have breeder
+    const testDog = utils.randomDog();
+    // Delete the dog
+    const res = await request(app).delete(`/dogs/${testDog.id}`);
+    expect(res.statusCode).toEqual(200);
+    // Get the list of all the breeder's dogs
+    const bRes = await request(app).get(`/breeders/${testDog.breederId}/dogs`);
+    expect(bRes.body).not.toContainEqual(testDog.id);
+  });
 
   test('Fails with bad ID', async () => {
     const res = await request(app).delete(`/dogs/iamnotavalidid`);
