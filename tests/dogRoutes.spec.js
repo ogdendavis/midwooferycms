@@ -312,7 +312,17 @@ describe('DELETE /dogs endpoint', () => {
     expect(getAllRes.body.length).toEqual(Dogs.length - 1);
   });
 
-  test('Removes dog from associated litter', async () => {});
+  test('Removes dog from associated litter', async () => {
+    // Get random dog from a litter, and associated litter
+    const testDog = utils.randomDog({ fromLitter: true });
+    const testLitter = utils.randomLitter({ pupId: testDog.id });
+    // Delete the dog
+    const res = await request(app).delete(`/dogs/${testDog.id}`);
+    expect(res.statusCode).toEqual(200);
+    // Get the litter
+    const lRes = await request(app).get(`/litters/${testLitter.id}`);
+    expect(lRes.body.pups).not.toContainEqual(testDog.id);
+  });
 
   test('Removes dog from breeder dog list', async () => {});
 

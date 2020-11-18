@@ -193,8 +193,12 @@ router.delete('/:dogId', async (req, res, next) => {
         `(Status code ${res.statusCode}) No dog with ID ${req.params.dogId}`
       );
   }
+  if (dog.litterId !== '') {
+    const litter = await req.context.models.Litter.findByPk(dog.litterId);
+    litter.update({ pups: litter.pups.filter((p) => p !== dog.id) });
+  }
   // Do the deleting
-  req.context.models.Dog.destroy({ where: { id: req.params.dogId } });
+  await dog.destroy();
   // Send back a copy of the deleted dog
   return res.send(dog);
 });
