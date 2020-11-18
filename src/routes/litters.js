@@ -272,7 +272,7 @@ router.delete('/:litterId', async (req, res, next) => {
       );
   }
   // Delete the litter and send back a copy
-  await litter.destroy();
+  await litter.destroy().catch(next);
   return res.send(litter);
 });
 

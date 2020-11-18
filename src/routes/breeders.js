@@ -128,21 +128,21 @@ router.post('/:breederId/restore', async (req, res, next) => {
       );
   }
   // We now have a breeder to restore!
-  await breeder.restore();
+  await breeder.restore().catch(next);
   // Get dogs and litters to restore, as well
   const dogs = await req.context.models.Dog.findAll({
     where: { breederId: req.params.breederId },
     paranoid: false,
-  });
+  }).catch(next);
   for (const d of dogs) {
-    await d.restore();
+    await d.restore().catch(next);
   }
   const litters = await req.context.models.Litter.findAll({
     where: { breederId: req.params.breederId },
     paranoid: false,
-  });
+  }).catch(next);
   for (const l of litters) {
-    await l.restore();
+    await l.restore().catch(next);
   }
 
   return res.status(201).send({ breeder, dogs, litters });
@@ -208,7 +208,7 @@ router.delete('/:breederId', async (req, res, next) => {
   }
 
   // Get the dogs associated with the breeder -- they'll be deleted, too
-  const byeDogs = await breeder.getDogs();
+  const byeDogs = await breeder.getDogs().catch(next);
   if (byeDogs.length > 0) {
     req.context.models.Dog.destroy({
       where: { id: byeDogs.map((d) => d.id) },
@@ -224,7 +224,7 @@ router.delete('/:breederId', async (req, res, next) => {
   }
 
   // Delete it!
-  await breeder.destroy();
+  await breeder.destroy().catch(next);
   // Send back a copy of the deleted breeder to confirm
   return res.send({ breeder, dogs: byeDogs, litters: byeLitters });
 });

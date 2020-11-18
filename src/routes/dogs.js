@@ -147,17 +147,21 @@ router.put('/:dogId', async (req, res, next) => {
   // If litterId is being updated, make the appropriate changes to the litter(s)
   if (req.body.hasOwnProperty('litterId')) {
     // Remove from old litter first
-    const oldLitter = await req.context.models.Litter.findByPk(dog.litterId);
+    const oldLitter = await req.context.models.Litter.findByPk(
+      dog.litterId
+    ).catch(next);
     if (oldLitter) {
-      await oldLitter.update({
-        pups: oldLitter.pups.filter((p) => p !== dog.id),
-      });
+      await oldLitter
+        .update({
+          pups: oldLitter.pups.filter((p) => p !== dog.id),
+        })
+        .catch(next);
     }
     // If the dog is being reassigned to a new litter, update that
     if (req.body.litterId !== '') {
       const newLitter = await req.context.models.Litter.findByPk(
         req.body.litterId
-      );
+      ).catch(next);
       // Reject the update if new litterId isn't valid
       if (!newLitter) {
         return res
@@ -167,7 +171,9 @@ router.put('/:dogId', async (req, res, next) => {
           );
       }
       // Add the dog's id to the new litter's pups array
-      await newLitter.update({ pups: newLitter.pups.concat([dog.id]) });
+      await newLitter
+        .update({ pups: newLitter.pups.concat([dog.id]) })
+        .catch(next);
     }
   }
 
@@ -194,11 +200,15 @@ router.delete('/:dogId', async (req, res, next) => {
       );
   }
   if (dog.litterId !== '') {
-    const litter = await req.context.models.Litter.findByPk(dog.litterId);
-    litter.update({ pups: litter.pups.filter((p) => p !== dog.id) });
+    const litter = await req.context.models.Litter.findByPk(dog.litterId).catch(
+      next
+    );
+    await litter
+      .update({ pups: litter.pups.filter((p) => p !== dog.id) })
+      .catch(next);
   }
   // Do the deleting
-  await dog.destroy();
+  await dog.destroy().catch(next);
   // Send back a copy of the deleted dog
   return res.send(dog);
 });
