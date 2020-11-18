@@ -95,6 +95,8 @@ router.post('/', async (req, res, next) => {
         }) Litter not created. Missing required field(s): ${missing.join(' ')}`
       );
   }
+  // Create the litter id first -- we'll need it to add to pups later
+  const id = req.body.id || uuidv4();
   // Confirm that breederId is valid
   const breeder = await req.context.models.Breeder.findByPk(
     req.body.breederId
@@ -140,8 +142,31 @@ router.post('/', async (req, res, next) => {
         );
     }
   }
+  // If pups are indicated, update the litterId on the pups
+  if (req.body.hasOwnProperty('pups') && req.body.pups.length > 0) {
+    for (const p of req.body.pups) {
+      const pup = await req.context.models.Dog.findByPk(p).catch(next);
+      // Only returns first invalid ID, but I'm ok with that for now
+      if (!pup) {
+        return res
+          .status(400)
+          .send(
+            `(Status code ${res.statusCode}) Litter not created. Invalid Dog ID ${p} in pups array`
+          );
+      }
+      if (pup.litterId !== '') {
+        // Assume litterId is valid, as we have checks for that elsewhere
+        return res
+          .status(400)
+          .send(
+            `(Status code ${res.statusCode}) Litter not created. Dog with ID ${p} already belongs to another litter`
+          );
+      }
+      // If we get here, pup is valid!
+      await pup.update({ litterId: id }).catch(next);
+    }
+  }
   // We have the info, so now make the litter!
-  const id = req.body.id || uuidv4();
   const newLitter = await req.context.models.Litter.create({
     ...req.body,
     id,

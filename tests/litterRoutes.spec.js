@@ -124,6 +124,50 @@ describe('POST /litters endpoint', () => {
     expect(res.body).toEqual(expect.objectContaining(data));
   });
 
+  test('Adds litterId to dogs indicated in pups array', async () => {
+    const data = {
+      breederId: utils.randomBreeder().id,
+      dam: { id: utils.randomDog({ sex: 'f' }).id },
+      pups: [utils.randomDog({ fromLitter: false }).id],
+    };
+    const res = await request(app).post(`/litters`).send(data);
+    expect(res.statusCode).toEqual(201);
+    const pRes = await request(app).get(`/dogs/${data.pups[0]}`);
+    expect(pRes.body.litterId).toEqual(res.body.id);
+  });
+
+  test('Rejects litter with pup that already belongs to another litter', async () => {
+    const testDog = utils.randomDog({ fromLitter: true });
+    const data = {
+      breederId: utils.randomBreeder().id,
+      dam: { id: utils.randomDog({ sex: 'f' }).id },
+      pups: [testDog.id],
+    };
+    const res = await request(app).post(`/litters`).send(data);
+    expect(res.statusCode).toEqual(400);
+    expect(res.text).toEqual(
+      expect.stringContaining(
+        `Dog with ID ${testDog.id} already belongs to another litter`
+      )
+    );
+    // Confirm that dog's litterId hasn't been changed
+    const pRes = await request(app).get(`/dogs/${data.pups[0]}`);
+    expect(pRes.body.litterId).toEqual(testDog.litterId);
+  });
+
+  test('Rejects litter with invalid ID in pups array', async () => {
+    const data = {
+      breederId: utils.randomBreeder().id,
+      dam: { id: utils.randomDog({ sex: 'f' }).id },
+      pups: ['tweedledeefancyfreeiswhatiwanttobee'],
+    };
+    const res = await request(app).post(`/litters`).send(data);
+    expect(res.statusCode).toEqual(400);
+    expect(res.text).toEqual(
+      expect.stringContaining(`Invalid Dog ID ${data.pups[0]} in pups array`)
+    );
+  });
+
   test('Rejects a litter without required data', async () => {
     const data = {
       sire: { name: 'Mr. Nopesies' },
