@@ -271,8 +271,16 @@ router.delete('/:litterId', async (req, res, next) => {
         `(Status code ${res.statusCode}) No litter with ID ${req.params.litterId}`
       );
   }
-  // Delete the litter and send back a copy
+  // Delete the litter
   await litter.destroy().catch(next);
+  // If there are pups in the litter, go find them and remove the litterId
+  if (litter.pups.length > 0) {
+    await req.context.models.Dog.update(
+      { litterId: '' },
+      { where: { id: litter.pups } }
+    );
+  }
+  // Send back a copy of the deleted litter
   return res.send(litter);
 });
 
