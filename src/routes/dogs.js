@@ -95,6 +95,45 @@ router.post('/', async (req, res, next) => {
   return res.status(201).send(newDog);
 });
 
+// Restore a deleted dog
+router.post('/:dogId/restore', async (req, res, next) => {
+  // Check for active dog
+  const activeDog = await req.context.models.Dog.findByPk(
+    req.params.dogId
+  ).catch(next);
+  if (activeDog) {
+    return res
+      .status(405)
+      .send(
+        `(Status code ${res.statusCode}) Dog with ID ${req.params.dogId} is already active`
+      );
+  }
+  // Check for deleted dog
+  const dog = await req.context.models.Dog.findByPk(req.params.dogId, {
+    paranoid: false,
+  }).catch(next);
+  if (!dog) {
+    return res
+      .status(404)
+      .send(
+        `(Status code ${res.statusCode}) No dog with ID ${req.params.breederId} found in deleted dogs`
+      );
+  }
+  // Now restore the dog!
+  await dog.restore().catch(next);
+  // Add the dog back to its litter, if it has one
+  if (dog.dataValues.litterId !== '') {
+    const litter = await req.context.models.Litter.findByPk(
+      dog.dataValues.litterId
+    ).catch(next);
+    await litter
+      .update({ pups: litter.pups.concat([dog.dataValues.id]) })
+      .catch(next);
+  }
+  // Send the successful response
+  return res.status(201).send(dog.dataValues);
+});
+
 // Update a dog by ID
 router.put('/:dogId', async (req, res, next) => {
   const dogRes = await req.context.models.Dog.findByPk(req.params.dogId).catch(

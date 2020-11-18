@@ -190,7 +190,7 @@ describe('POST /dogs endpoints', () => {
     const res = await request(app).post(`/dogs/${testDog.id}/restore`);
     expect(res.statusCode).toEqual(405);
     expect(res.text).toEqual(
-      expect.stringContaining(`Dog with ID ${testBreeder.id} is already active`)
+      expect.stringContaining(`Dog with ID ${testDog.id} is already active`)
     );
   });
   test('POST /dogs/:dogId/restore rejects bad id', async () => {
