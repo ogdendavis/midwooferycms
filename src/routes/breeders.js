@@ -224,7 +224,7 @@ router.delete('/:breederId', async (req, res, next) => {
   }
 
   // Delete it!
-  req.context.models.Breeder.destroy({ where: { id: req.params.breederId } });
+  await breeder.destroy();
   // Send back a copy of the deleted breeder to confirm
   return res.send({ breeder, dogs: byeDogs, litters: byeLitters });
 });
