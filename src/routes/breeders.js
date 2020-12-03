@@ -3,70 +3,19 @@ import { v4 as uuidv4 } from 'uuid';
 
 const router = Router();
 
+import controllers from '../controllers';
+
 // Get all breeders
-router.get('/', async (req, res, next) => {
-  const breeders = await req.context.models.Breeder.findAll().catch(next);
-  return res.send(breeders);
-});
+router.get('/', controllers.get.all);
 
 // Get one breeder by id
-router.get('/:breederId', async (req, res, next) => {
-  const breeder = await req.context.models.Breeder.findByPk(
-    req.params.breederId
-  ).catch(next);
-  if (breeder) {
-    return res.send(breeder);
-  }
-  return res
-    .status(404)
-    .send(
-      `(Status code ${res.statusCode}) No breeder with ID ${req.params.breederId}`
-    );
-});
+router.get('/:breederId', controllers.get.byId);
 
 // Get all of a breeder's dogs
-router.get('/:breederId/dogs', async (req, res, next) => {
-  const breeder = await req.context.models.Breeder.findByPk(
-    req.params.breederId
-  ).catch(next);
-  if (breeder) {
-    const dogs = await breeder.getDogs().catch(next);
-    return dogs.length > 0
-      ? res.send(dogs)
-      : res
-          .status(204)
-          .send(
-            `(Status code ${res.statusCode}) No dogs listed for breeder ${req.params.breederId}`
-          );
-  }
-  return res
-    .status(404)
-    .send(
-      `(Status code ${res.statusCode}) No breeder with ID ${req.params.breederId}`
-    );
-});
+router.get('/:breederId/dogs', controllers.get.associated);
 
 // Get all of a breeder's litters
-router.get('/:breederId/litters', async (req, res, next) => {
-  const breeder = await req.context.models.Breeder.findByPk(
-    req.params.breederId
-  ).catch(next);
-  if (breeder) {
-    const litters = await breeder.getLitters().catch(next);
-    return litters.length > 0
-      ? res.send(litters)
-      : res
-          .status(204)
-          .send(
-            `(Status code ${res.statusCode}) No litters listed for breeder ${req.params.breederId}`
-          );
-  }
-  return res
-    .status(404)
-    .send(
-      `(Status code ${res.statusCode}) No breeder with ID ${req.params.breederId}`
-    );
-});
+router.get('/:breederId/litters', controllers.get.associated);
 
 // Create a breeder
 router.post('/', async (req, res, next) => {

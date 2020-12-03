@@ -3,44 +3,17 @@ import { v4 as uuidv4 } from 'uuid';
 
 const router = Router();
 
+// Import controllers
+import controllers from '../controllers';
+
 // Get all dogs
-router.get('/', async (req, res, next) => {
-  const dogs = await req.context.models.Dog.findAll().catch(next);
-  return res.send(dogs);
-});
+router.get('/', controllers.get.all);
 
 // Get one dog by id
-router.get('/:dogId', async (req, res, next) => {
-  const dog = await req.context.models.Dog.findByPk(req.params.dogId).catch(
-    next
-  );
-  if (dog) {
-    return res.send(dog);
-  }
-  return res
-    .status(404)
-    .send(`(Status code ${res.statusCode}) No dog with ID ${req.params.dogId}`);
-});
+router.get('/:dogId', controllers.get.byId);
 
 // Get a dog's breeder
-router.get('/:dogId/breeder', async (req, res, next) => {
-  const dog = await req.context.models.Dog.findByPk(req.params.dogId).catch(
-    next
-  );
-  if (dog) {
-    const breeder = await dog.getBreeder().catch(next);
-    return breeder
-      ? res.send(breeder)
-      : res
-          .status(404)
-          .send(
-            `(Status code ${res.statusCode}) No breeder listed for ${dog.name}`
-          );
-  }
-  return res
-    .status(404)
-    .send(`(Status code ${res.statusCode}) No dog with ID ${req.params.dogId}`);
-});
+router.get('/:dogId/breeder', controllers.get.associated);
 
 // Create a dog
 router.post('/', async (req, res, next) => {

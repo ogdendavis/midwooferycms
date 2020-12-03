@@ -3,81 +3,20 @@ import { v4 as uuidv4 } from 'uuid';
 
 const router = Router();
 
+import controllers from '../controllers';
+
 // Get basic info on all litters
 // As model grows, needs to be refined down to basic stats. Should probably eventually be eliminated altogether
-router.get('/', async (req, res, next) => {
-  const litters = await req.context.models.Litter.findAll().catch(next);
-  return res.send(litters);
-});
+router.get('/', controllers.get.all);
 
 // Get one litter by id
-router.get('/:litterId', async (req, res, next) => {
-  const litter = await req.context.models.Litter.findByPk(
-    req.params.litterId
-  ).catch(next);
-  if (litter) {
-    return res.send(litter);
-  }
-  return res
-    .status(404)
-    .send(
-      `(Status code ${res.statusCode}) No litter with ID ${req.params.litterId}`
-    );
-});
+router.get('/:litterId', controllers.get.byId);
 
 // Get the listed puppies of a litter by id
-router.get('/:litterId/pups', async (req, res, next) => {
-  // First, grab the indicated litter
-  const litter = await req.context.models.Litter.findByPk(
-    req.params.litterId
-  ).catch(next);
-  // Early return if litter isn't there
-  if (!litter) {
-    return res
-      .status(404)
-      .send(
-        `(Status code ${res.statusCode}) No litter with ID ${req.params.litterId}`
-      );
-  }
-  // Don't search if no pups are listed
-  if (litter.pups.length > 0) {
-    const pups = await req.context.models.Dog.findAll({
-      where: { litterId: req.params.litterId },
-    }).catch(next);
-    // Check if the pups are actually there...
-    if (pups) {
-      return res.send(pups);
-    }
-  }
-  // If no pups listed, indicate that!
-  return res
-    .status(204)
-    .send(`(Status code ${res.statusCode}) No pups found for this litter`);
-});
+router.get('/:litterId/pups', controllers.get.associated);
 
 // Get the breeder of a litter by id
-router.get('/:litterId/breeder', async (req, res, next) => {
-  const litter = await req.context.models.Litter.findByPk(
-    req.params.litterId
-  ).catch(next);
-  // Early return if litter isn't there
-  if (!litter) {
-    return res
-      .status(404)
-      .send(
-        `(Status code ${res.statusCode}) No litter with ID ${req.params.litterId}`
-      );
-  }
-  // Get the breeder
-  const breeder = await litter.getBreeder().catch(next);
-  // Breeder should always exist, but just in case...
-  if (!breeder) {
-    return res
-      .status(404)
-      .send(`(Status code ${res.statusCode}) No breeder found for this litter`);
-  }
-  return res.send(breeder);
-});
+router.get('/:litterId/breeder', controllers.get.associated);
 
 // Create a new litter
 router.post('/', async (req, res, next) => {
