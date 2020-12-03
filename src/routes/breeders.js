@@ -18,38 +18,7 @@ router.get('/:breederId/dogs', controllers.get.associated);
 router.get('/:breederId/litters', controllers.get.associated);
 
 // Create a breeder
-router.post('/', async (req, res, next) => {
-  // Check for required fields
-  if (!req.body.firstname || !req.body.lastname) {
-    return res
-      .status(400)
-      .send(
-        `(Status code ${res.statusCode}) Please enter a first and last name`
-      );
-  }
-  // If ID is provided, make sure it's unique
-  if (req.body.hasOwnProperty('id')) {
-    const existing = await req.context.models.Breeder.findByPk(
-      req.body.id
-    ).catch(next);
-    if (existing) {
-      return res
-        .status(400)
-        .send(
-          `(Status code ${res.statusCode}) A breeder with id ${req.body.id} already exists`
-        );
-    }
-  }
-  // Generate an id, if not given, and create an object with the breeder info
-  const id = req.body.id || uuidv4();
-  const newBreeder = await req.context.models.Breeder.create({
-    ...req.body,
-    id,
-  }).catch(next);
-
-  // Send the newly created breeder back to confirm
-  return res.status(201).send(newBreeder);
-});
+router.post('/', controllers.post.create);
 
 // Restore a previously deleted breeder
 router.post('/:breederId/restore', async (req, res, next) => {

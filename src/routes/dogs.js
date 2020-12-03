@@ -1,5 +1,5 @@
 import Router from 'express';
-import { v4 as uuidv4 } from 'uuid';
+// import { v4 as uuidv4 } from 'uuid';
 
 const router = Router();
 
@@ -16,57 +16,7 @@ router.get('/:dogId', controllers.get.byId);
 router.get('/:dogId/breeder', controllers.get.associated);
 
 // Create a dog
-router.post('/', async (req, res, next) => {
-  // Check for required input
-  if (!req.body.name || !req.body.breederId) {
-    const missing = [
-      !req.body.name && 'name',
-      !req.body.breederId && 'breederId',
-    ];
-
-    return res
-      .status(400)
-      .send(
-        `(Status code ${
-          res.statusCode
-        }) Dog not created. Missing required field(s): ${missing.join(' ')}`
-      );
-  }
-  // Make sure breederId provided is valid
-  const breeder = await req.context.models.Breeder.findByPk(
-    req.body.breederId
-  ).catch(next);
-  if (!breeder) {
-    return res
-      .status(400)
-      .send(
-        `(Status code ${res.statusCode}) Invalid breederId: ${req.body.breederId}`
-      );
-  }
-  // Make sure ID (if provided) is unique
-  if (req.body.hasOwnProperty('id')) {
-    const existingDog = await req.context.models.Dog.findByPk(
-      req.body.id
-    ).catch(next);
-    if (existingDog) {
-      return res
-        .status(400)
-        .send(
-          `(Status code ${res.statusCode}) A dog already exists with id ${req.body.id}`
-        );
-    }
-  }
-  // Generate random ID for the new dog, if one not provided
-  const id = req.body.id || uuidv4();
-  // Make the new dog, and add it to the database
-  const newDog = await req.context.models.Dog.create({
-    ...req.body,
-    id, // last to overwrite, if needed
-  }).catch(next);
-
-  // Confirm by sending the new dog back to the user with status code indicating resource creation
-  return res.status(201).send(newDog);
-});
+router.post('/', controllers.post.create);
 
 // Restore a deleted dog
 router.post('/:dogId/restore', async (req, res, next) => {

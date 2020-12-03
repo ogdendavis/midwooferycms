@@ -110,7 +110,6 @@ describe('POST /dogs endpoints', () => {
   test('Rejects missing or invalid breederId', async () => {
     // No Breeder ID provided
     const noBID = {
-      id: 'bad1',
       name: 'Lassie',
       color: 'blue',
       weight: 300,
