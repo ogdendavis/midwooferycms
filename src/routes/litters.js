@@ -21,40 +21,7 @@ router.get('/:litterId/breeder', controllers.get.associated);
 router.post('/', controllers.post.create);
 
 // Restore a previously deleted litter
-router.post('/:litterId/restore', async (req, res, next) => {
-  // Check for active litter
-  const activeLitter = await req.context.models.Litter.findByPk(
-    req.params.litterId
-  ).catch(next);
-  if (activeLitter) {
-    return res
-      .status(405)
-      .send(
-        `(Status code ${res.statusCode}) Litter with ID ${req.params.litterId} is already active`
-      );
-  }
-  // Check for deleted litter
-  const litter = await req.context.models.Litter.findByPk(req.params.litterId, {
-    paranoid: false,
-  }).catch(next);
-  if (!litter) {
-    return res
-      .status(404)
-      .send(
-        `(Status code ${res.statusCode}) No litter with ID ${req.params.litterId} found in deleted litters`
-      );
-  }
-  // We have a litter to restore!
-  await litter.restore().catch(next);
-  // Restore litterId on dogs in pups list, if any
-  if (litter.pups.length > 0) {
-    await req.context.models.Dog.update(
-      { litterId: litter.id },
-      { where: { id: litter.pups } }
-    );
-  }
-  return res.status(201).send(litter);
-});
+router.post('/:litterId/restore', controllers.post.restore);
 
 // Update a litter by id
 router.put('/:litterId', async (req, res, next) => {

@@ -20,50 +20,7 @@ router.get('/:breederId/litters', controllers.get.associated);
 router.post('/', controllers.post.create);
 
 // Restore a previously deleted breeder
-router.post('/:breederId/restore', async (req, res, next) => {
-  // Check for an active breeder with the ID
-  const activeBreeder = await req.context.models.Breeder.findByPk(
-    req.params.breederId
-  ).catch(next);
-  if (activeBreeder) {
-    return res
-      .status(405)
-      .send(
-        `(Status code ${res.statusCode}) Breeder with ID ${req.params.breederId} is already active`
-      );
-  }
-  // Check for deleted breeder
-  const breeder = await req.context.models.Breeder.findByPk(
-    req.params.breederId,
-    { paranoid: false }
-  ).catch(next);
-  if (!breeder) {
-    return res
-      .status(404)
-      .send(
-        `(Status code ${res.statusCode}) No breeder with ID ${req.params.breederId} found in deleted breeders`
-      );
-  }
-  // We now have a breeder to restore!
-  await breeder.restore().catch(next);
-  // Get dogs and litters to restore, as well
-  const dogs = await req.context.models.Dog.findAll({
-    where: { breederId: req.params.breederId },
-    paranoid: false,
-  }).catch(next);
-  for (const d of dogs) {
-    await d.restore().catch(next);
-  }
-  const litters = await req.context.models.Litter.findAll({
-    where: { breederId: req.params.breederId },
-    paranoid: false,
-  }).catch(next);
-  for (const l of litters) {
-    await l.restore().catch(next);
-  }
-
-  return res.status(201).send({ breeder, dogs, litters });
-});
+router.post('/:breederId/restore', controllers.post.restore);
 
 // Update a breeder by ID
 router.put('/:breederId', async (req, res, next) => {

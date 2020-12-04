@@ -64,6 +64,57 @@ const post = {
       .catch(next);
     return res.status(201).send(newAsset);
   },
+
+  restore: async (req, res, next) => {
+    const info = utils.getAssetInfo(req);
+    // Get the thing from the database
+    const assetInDB = await info.model
+      .findByPk(info.id, { paranoid: false })
+      .catch(next);
+    // Check if the ID isn't associated with any deleted or active dog
+    if (!assetInDB) {
+      return res
+        .status(404)
+        .send(
+          `(Status code 404) No ${info.noun} with ID ${info.id} found in deleted ${info.noun}s`
+        );
+    }
+    // Check if the thing has been deleted!
+    if (assetInDB.deletedAt === null) {
+      return res
+        .status(405)
+        .send(
+          `(Status code 405) ${utils.capitalize(info.noun)} with ID ${
+            info.id
+          } is already active`
+        );
+    }
+
+    // Now try to restore the asset
+    await assetInDB.restore().catch(next);
+    // And its associations
+    const associatedRestored = await asyncRestoreAssociations(
+      info.noun,
+      req.context.models,
+      assetInDB.dataValues
+    ).catch(next);
+
+    // Construct the return object -- will vary by noun restored
+    const retObj =
+      info.noun === 'dog'
+        ? assetInDB.dataValues
+        : info.noun === 'breeder'
+        ? {
+            breeder: assetInDB.dataValues,
+            dogs: associatedRestored.dogs,
+            litters: associatedRestored.litters,
+          }
+        : info.noun === 'litter'
+        ? assetInDB.dataValues
+        : {};
+
+    return res.status(201).send(retObj);
+  },
 };
 
 /*
@@ -184,6 +235,47 @@ const asyncUpdatePups = async (litterId, pups) => {
   for (const pup of pups) {
     await pup.update({ litterId });
   }
+  return true;
+};
+
+// Manually restore associated data when an asset is restored from deletion
+const asyncRestoreAssociations = async (noun, models, asset) => {
+  // Just do cases for each noun
+  // If it's a dog with a litterId, we re-add it to the litter's pups list
+  if (noun === 'dog' && asset.litterId !== '') {
+    const litter = await models.Litter.findByPk(asset.litterId);
+    await litter.update({ pups: litter.pups.concat([asset.id]) });
+    return true;
+  }
+  // If breeder, restore dogs and litters that were deleted when breeder was deleted
+  else if (noun === 'breeder') {
+    const dogs = await models.Dog.findAll({
+      where: { breederId: asset.id },
+      paranoid: false,
+    });
+    for (const d of dogs) {
+      await d.restore();
+    }
+    const litters = await models.Litter.findAll({
+      where: { breederId: asset.id },
+      paranoid: false,
+    });
+    for (const l of litters) {
+      await l.restore();
+    }
+    return { dogs, litters };
+  }
+  // If litter, add litterId back to pups
+  else if (noun === 'litter') {
+    if (asset.pups.length > 0) {
+      await models.Dog.update(
+        { litterId: asset.id },
+        { where: { id: asset.pups } }
+      );
+    }
+    return true;
+  }
+  return false;
 };
 
 export default post;
