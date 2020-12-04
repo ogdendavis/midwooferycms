@@ -8,10 +8,10 @@ const testDatabaseSetup = async () => {
   try {
     await sequelize.sync({ force: true });
     await populateModel('Breeder', breeders);
-    await populateModel('Litter', litters);
     await populateModel('Dog', dogs);
+    await populateModel('Litter', litters);
   } catch (er) {
-    console.log('not connected', er);
+    console.log('Test database setup error:', er);
   }
 };
 

@@ -1,5 +1,4 @@
 import Router from 'express';
-import { v4 as uuidv4 } from 'uuid';
 
 const router = Router();
 
@@ -19,99 +18,7 @@ router.get('/:litterId/pups', controllers.get.associated);
 router.get('/:litterId/breeder', controllers.get.associated);
 
 // Create a new litter
-router.post('/', async (req, res, next) => {
-  // Check for required input
-  if (!req.body.breederId || !req.body.dam) {
-    const missing = [
-      !req.body.breederId && 'breederId',
-      !req.body.dam && 'dam',
-    ];
-    return res
-      .status(400)
-      .send(
-        `(Status code ${
-          res.statusCode
-        }) Litter not created. Missing required field(s): ${missing.join(' ')}`
-      );
-  }
-  // Create the litter id first -- we'll need it to add to pups later
-  const id = req.body.id || uuidv4();
-  // Confirm that breederId is valid
-  const breeder = await req.context.models.Breeder.findByPk(
-    req.body.breederId
-  ).catch(next);
-  if (!breeder) {
-    return res
-      .status(400)
-      .send(
-        `(Status code ${res.statusCode}) Litter not created. Invalid breederId: ${req.body.breederId}`
-      );
-  }
-  // Confirm that dam info is valid
-  if (req.body.dam.hasOwnProperty('id')) {
-    // Case for if an ID is provided
-    const damInDB = await req.context.models.Dog.findByPk(
-      req.body.dam.id
-    ).catch(next);
-    if (!damInDB) {
-      return res
-        .status(400)
-        .send(
-          `(Status code ${res.statusCode}) Litter not created. Invalid dam id: No dog found with ID ${req.body.dam.id}`
-        );
-    }
-    if (damInDB.sex === 'm') {
-      return res
-        .status(400)
-        .send(
-          `(Status code ${res.statusCode}) Litter not created. Dog with ID ${req.body.dam.id} is male, so cannot be dam of litter`
-        );
-    }
-  } else {
-    // If an ID is not provided, check to make sure that the dam object exists, and that it has a valid name
-    if (
-      !req.body.dam.name ||
-      typeof req.body.dam.name !== 'string' ||
-      req.body.dam.name.length < 2
-    ) {
-      return res
-        .status(400)
-        .send(
-          `(Status code ${res.statusCode}) Litter not created. Please provide valid dam information. Dam information should be an object containing at least one of a valid dog id or the name of a dog`
-        );
-    }
-  }
-  // If pups are indicated, update the litterId on the pups
-  if (req.body.hasOwnProperty('pups') && req.body.pups.length > 0) {
-    for (const p of req.body.pups) {
-      const pup = await req.context.models.Dog.findByPk(p).catch(next);
-      // Only returns first invalid ID, but I'm ok with that for now
-      if (!pup) {
-        return res
-          .status(400)
-          .send(
-            `(Status code ${res.statusCode}) Litter not created. Invalid Dog ID ${p} in pups array`
-          );
-      }
-      if (pup.litterId !== '') {
-        // Assume litterId is valid, as we have checks for that elsewhere
-        return res
-          .status(400)
-          .send(
-            `(Status code ${res.statusCode}) Litter not created. Dog with ID ${p} already belongs to another litter`
-          );
-      }
-      // If we get here, pup is valid!
-      await pup.update({ litterId: id }).catch(next);
-    }
-  }
-  // We have the info, so now make the litter!
-  const newLitter = await req.context.models.Litter.create({
-    ...req.body,
-    id,
-  }).catch(next);
-  return res.status(201).send(newLitter);
-});
+router.post('/', controllers.post.create);
 
 // Restore a previously deleted litter
 router.post('/:litterId/restore', async (req, res, next) => {
