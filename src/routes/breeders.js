@@ -23,50 +23,7 @@ router.post('/', controllers.post.create);
 router.post('/:breederId/restore', controllers.post.restore);
 
 // Update a breeder by ID
-router.put('/:breederId', async (req, res, next) => {
-  const breederRes = await req.context.models.Breeder.findByPk(
-    req.params.breederId
-  ).catch(next);
-  if (!breederRes) {
-    return res
-      .status(404)
-      .send(
-        `(Status code ${res.statusCode}) No breeder with ID ${req.params.breederId}`
-      );
-  }
-
-  // Surface the data from the return object
-  const breeder = breederRes.dataValues;
-
-  // Any invalid updates sent should cancel the entire update and return a useful message
-  const [badKeys, goodKeys] = [[], []];
-  for (const key in req.body) {
-    // Don't allow changes to ID
-    if (key === 'id' || !breeder.hasOwnProperty(key)) {
-      badKeys.push(key);
-    } else {
-      goodKeys.push(key);
-    }
-  }
-  if (badKeys.length > 0) {
-    return res
-      .status(400)
-      .send(
-        `(Status code ${
-          res.statusCode
-        }) Attempted to update invalid fields: ${badKeys.join(', ')}`
-      );
-  }
-
-  // Send the updates, and get back the udpated breeder object
-  const updatedBreeder = await req.context.models.Breeder.update(req.body, {
-    where: { id: req.params.breederId },
-    returning: true,
-  }).catch(next);
-
-  // Surface actual data in returned object from update, and send it back to confirm
-  return res.send({ updated: goodKeys, result: updatedBreeder[1][0] });
-});
+router.put('/:breederId', controllers.put.update);
 
 // Delete a breeder by ID
 router.delete('/:breederId', async (req, res, next) => {

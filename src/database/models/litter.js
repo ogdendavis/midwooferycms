@@ -14,6 +14,9 @@ const litter = (sequelize, DataTypes) => {
       count: {
         type: DataTypes.INTEGER,
         defaultValue: 0,
+        validate: {
+          isInt: true,
+        },
       },
       dam: {
         type: DataTypes.JSON,
