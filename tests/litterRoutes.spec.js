@@ -432,9 +432,12 @@ describe('PUT /litters endpoints', () => {
         name: '***There is no dog with this name***',
       },
     };
-    expect(badNameRes.statusCode).toEqual(400);
-    expect(badNameRes.body).toEqual({});
-    expect(badNameRes.text).toEqual(expect.stringContaining('dam'));
+    const noMatchRes = await request(app)
+      .put(`/litters/${testLitter.id}`)
+      .send(noMatch);
+    expect(noMatchRes.statusCode).toEqual(400);
+    expect(noMatchRes.body).toEqual({});
+    expect(noMatchRes.text).toEqual(expect.stringContaining('dam'));
     // Case: Dam object contains neither name nor ID
     const noIdOrName = {
       dam: { quest: 'make_puppies' },

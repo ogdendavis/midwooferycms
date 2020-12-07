@@ -37,8 +37,23 @@ app.get('*', (req, res, next) => {
 });
 
 // Handle errors -- 4 args tells Express this is an error handler
-app.use((error, req, res, next) => {
-  return res.status(500).send({ error: error.toString() });
+app.use((err, req, res, next) => {
+  let [status, message] = [500, ''];
+  // Handle Sequelize validation errors
+  if (err.name === 'SequelizeValidationError') {
+    const msgArr = [];
+    for (const e of err.errors) {
+      msgArr.push(e.message);
+    }
+    message = msgArr.join('. ');
+    status = 400;
+    return res.status(status).send(message);
+  }
+  // Console log unhandled errors;
+  if (message === '') {
+    console.log('********* UNHANDLED ERROR *********', error);
+  }
+  return res.status(status).send(message);
 });
 
 // Export for implementation in src/index, as well as testing

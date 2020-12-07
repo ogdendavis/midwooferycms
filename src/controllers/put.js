@@ -58,22 +58,32 @@ const put = {
           );
       }
     }
-    // If we get here, we can attempt the update
-    // Catch function saves error object as updatedAsset
-    const updatedAsset = await info.model
+    // If sire id or dam id are provided, make sure they're valid!
+    const parentCheck = await asyncCheckLitterParents(req);
+    if (!parentCheck.isValid) {
+      return res
+        .status(400)
+        .send(`(Status code 400) Bad ${parentCheck.error} info sent`);
+    }
+    // Finally, check pups array, if it's there!
+    if (req.body.hasOwnProperty('pups') && !(await asyncCheckLitterPups(req))) {
+      return res.status(400).send(`(Status code 400) Bad pups info sent`);
+    }
+    // If we get here, we can attempt the update -- only failures from here should be data validation from rules defined in database models
+    return await info.model
       .update(req.body, {
         where: { id: info.id },
         returning: true,
       })
-      .catch((er) => er);
-    // Handle errors from sequelize -- probably due to data validation
-    if (updatedAsset.hasOwnProperty('errors')) {
-      console.log(updatedAsset.errors[0].message);
-      return res.status(400).send(updatedAsset.errors[0].message);
-    } else {
-      // Pull out updated asset from Sequelize's return, and return it to user
-      return res.send({ updated: goodKeys, result: updatedAsset[1][0] });
-    }
+      .then((updatedAsset) => {
+        return res.status(200).send({
+          updated: goodKeys,
+          result: updatedAsset[1][0],
+        });
+      })
+      .catch((err) => {
+        next(err);
+      });
   },
 };
 
@@ -99,6 +109,49 @@ const asyncUpdateLitters = async (req, dog) => {
     await newLitter.update({ pups: newLitter.pups.concat([dog.id]) });
   }
   return true;
+};
+
+const asyncCheckLitterParents = async (req) => {
+  // Only called if we are processing a litter
+  if (req.body.hasOwnProperty('dam')) {
+    if (
+      req.body.dam.hasOwnProperty('id') &&
+      !(await utils.asyncDoesAssetExist(
+        req.body.dam.id,
+        req.context.models.Dog
+      ))
+    ) {
+      return { isValid: false, error: 'dam id' };
+    } else if (
+      req.body.dam.hasOwnProperty('id') &&
+      req.body.dam.hasOwnProperty('name')
+    ) {
+      const damInDB = await req.context.models.Dog.findByPk(req.body.dam.id);
+      if (damInDB.name !== req.body.dam.name) {
+        return { isValid: false, error: 'dam id or name' };
+      }
+    }
+  }
+  if (
+    req.body.hasOwnProperty('sire') &&
+    req.body.sire.hasOwnProperty('id') &&
+    !(await utils.asyncDoesAssetExist(req.body.sire.id, req.context.models.Dog))
+  ) {
+    return { isValid: false, error: 'sire id' };
+  }
+  return { isValid: true };
+};
+
+const asyncCheckLitterPups = async (req) => {
+  // Only called if req.body.pups exists
+  if (Array.isArray(req.body.pups) && req.body.pups.length > 0) {
+    for (const pup of req.body.pups) {
+      if (!(await utils.asyncDoesAssetExist(pup, req.context.models.Dog))) {
+        return false;
+      }
+    }
+    return true;
+  }
 };
 
 export default put;
