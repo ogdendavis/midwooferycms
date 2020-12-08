@@ -23,41 +23,9 @@ router.post('/', controllers.post.create);
 router.post('/:breederId/restore', controllers.post.restore);
 
 // Update a breeder by ID
-router.put('/:breederId', controllers.put.update);
+router.put('/:breederId', controllers.put.updateOne);
 
 // Delete a breeder by ID
-router.delete('/:breederId', async (req, res, next) => {
-  const breeder = await req.context.models.Breeder.findByPk(
-    req.params.breederId
-  ).catch(next);
-  if (!breeder) {
-    return res
-      .status(404)
-      .send(
-        `(Status code ${res.statusCode}) No breeder with ID ${req.params.breederId}`
-      );
-  }
-
-  // Get the dogs associated with the breeder -- they'll be deleted, too
-  const byeDogs = await breeder.getDogs().catch(next);
-  if (byeDogs.length > 0) {
-    req.context.models.Dog.destroy({
-      where: { id: byeDogs.map((d) => d.id) },
-    }).catch(next);
-  }
-
-  // And delete associated litters, too
-  const byeLitters = await breeder.getLitters();
-  if (byeLitters.length > 0) {
-    req.context.models.Litter.destroy({
-      where: { id: byeLitters.map((l) => l.id) },
-    }).catch(next);
-  }
-
-  // Delete it!
-  await breeder.destroy().catch(next);
-  // Send back a copy of the deleted breeder to confirm
-  return res.send({ breeder, dogs: byeDogs, litters: byeLitters });
-});
+router.delete('/:breederId', controllers.del.deleteOne);
 
 export default router;

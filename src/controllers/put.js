@@ -1,7 +1,7 @@
 import utils from './utils';
 
 const put = {
-  update: async (req, res, next) => {
+  updateOne: async (req, res, next) => {
     const info = utils.getAssetInfo(req);
     const asset = await info.model.findByPk(info.id);
     // Make sure asset exists to be updated
