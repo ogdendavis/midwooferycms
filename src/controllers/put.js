@@ -31,6 +31,13 @@ const put = {
           )}`
         );
     }
+    // If updating an email address, make sure it's unique!
+    // For breeder creation, check that email provided is unique
+    if (info.noun === 'breeder' && req.body.hasOwnProperty('email')) {
+      if (!(await utils.asyncIsBreederEmailUnique(req))) {
+        return res.status(400).send('Breeder email must be unique');
+      }
+    }
     // If a breederId is provided to update, make sure the new value is good
     if (
       req.body.hasOwnProperty('breederId') &&

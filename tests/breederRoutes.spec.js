@@ -95,6 +95,8 @@ describe('POST /breeders endpoints', () => {
       lastname: 'Lorna',
       city: 'Houston',
       state: 'LA',
+      email: 'iaman@email.address.com',
+      password: '12345',
     };
     const res = await request(app).post('/breeders').send(data);
     expect(res.statusCode).toEqual(201);
@@ -105,8 +107,10 @@ describe('POST /breeders endpoints', () => {
     const data = {
       firstname: 'Firsty',
       lastname: 'McFirsterson',
+      email: 'fake@email.com',
+      password: 'supersercure',
     };
-    // Just send the minimum -- first and last names
+    // Just send the minimum -- first and last names, email and pw
     const res = await request(app).post('/breeders').send(data);
     expect(res.statusCode).toEqual(201);
     expect(res.body.firstname).toEqual(data.firstname);
@@ -117,7 +121,78 @@ describe('POST /breeders endpoints', () => {
     expect(res.body.city).toEqual('');
   });
 
-  test('Fails if bad data sent', async () => {
+  test('Fails if no email sent', async () => {
+    const data = {
+      firstname: 'Fred',
+      lastname: 'Flinstone',
+      password: 'onetwothree',
+    };
+    const res = await request(app).post('/breeders').send(data);
+    expect(res.statusCode).toEqual(400);
+    expect(res.body).toEqual({});
+    expect(res.text).toEqual(expect.stringContaining('email'));
+  });
+
+  test('Fails if email not unique', async () => {
+    const testEmail = utils.randomBreeder()['email'];
+    const data = {
+      firstname: 'Fred',
+      lastname: 'Flinstone',
+      password: 'onetwothree',
+      email: testEmail,
+    };
+    const res = await request(app).post('/breeders').send(data);
+    expect(res.statusCode).toEqual(400);
+    expect(res.body).toEqual({});
+    expect(res.text).toEqual(expect.stringContaining('email'));
+  });
+
+  test("Fails if email isn't a valid address", async () => {
+    const data = {
+      firstname: 'Fred',
+      lastname: 'Flinstone',
+      password: 'onetwothree',
+      email: '9',
+    };
+    const res = await request(app).post('/breeders').send(data);
+    expect(res.statusCode).toEqual(400);
+    expect(res.body).toEqual({});
+    expect(res.text).toEqual(expect.stringContaining('email'));
+  });
+
+  test('Fails if no password sent', async () => {
+    const data = {
+      firstname: 'Fred',
+      lastname: 'Flinstone',
+      email: 'freddy@flinstonesdonthaveemail.com',
+    };
+    const res = await request(app).post('/breeders').send(data);
+    expect(res.statusCode).toEqual(400);
+    expect(res.body).toEqual({});
+    expect(res.text).toEqual(expect.stringContaining('password'));
+  });
+
+  test('Fails if password is too short or long', async () => {
+    // Too short
+    const data = {
+      firstname: 'Fred',
+      lastname: 'Flinstone',
+      email: 'freddy@flinstonesdonthaveemail.com',
+      password: '1234',
+    };
+    const res = await request(app).post('/breeders').send(data);
+    expect(res.statusCode).toEqual(400);
+    expect(res.body).toEqual({});
+    expect(res.text).toEqual(expect.stringContaining('password'));
+    // Too long
+    data.password = '123456789012345678901234567890123';
+    const resLong = await request(app).post('/breeders').send(data);
+    expect(resLong.statusCode).toEqual(400);
+    expect(resLong.body).toEqual({});
+    expect(resLong.text).toEqual(expect.stringContaining('password'));
+  });
+
+  test('Fails if bad key sent in update object', async () => {
     const badData = {
       id: 'idontexist',
       firstname: 'Fred',
@@ -232,6 +307,7 @@ describe('PUT /breeders endpoints', () => {
       lastname: 'Incognito',
       city: 'Anywhere',
       state: 'USA',
+      email: 'completelyuniqueemail@gmale.net',
     };
     const testBreeder = utils.randomBreeder();
     const res = await request(app)
@@ -249,6 +325,62 @@ describe('PUT /breeders endpoints', () => {
     // Confirm that the data matches on a follow-up GET request
     const getRes = await request(app).get(`/breeders/${testBreeder.id}`);
     expect(getRes.body).toEqual(res.body.result);
+  });
+
+  test('Rejects change to non-unique email', async () => {
+    // Get one breeder with litters and one without, so we know we're getting two different breeders to compare
+    const breederOne = utils.randomBreeder({ hasLitters: true });
+    const breederTwo = utils.randomBreeder({ hasLitters: false });
+    // Flip a coin to see which one is control and which is experiment
+    const [testBreeder, ctlBreeder] =
+      Math.random() < 0.5 ? [breederOne, breederTwo] : [breederTwo, breederOne];
+    const data = {
+      email: ctlBreeder.email,
+    };
+    const res = await request(app)
+      .put(`/breeders/${testBreeder.id}`)
+      .send(data);
+    expect(res.statusCode).toEqual(400);
+    expect(res.body).toEqual({});
+    expect(res.text).toEqual(expect.stringContaining('email'));
+  });
+
+  test('Rejects invalid email address update', async () => {
+    const testBreeder = utils.randomBreeder();
+    const data = {
+      email: 'tobeornottobe',
+    };
+    const res = await request(app)
+      .put(`/breeders/${testBreeder.id}`)
+      .send(data);
+    expect(res.statusCode).toEqual(400);
+    expect(res.body).toEqual({});
+    expect(res.text).toEqual(expect.stringContaining('email'));
+  });
+
+  test('Rejects invalid password update', async () => {
+    const testBreeder = utils.randomBreeder();
+    // Too short
+    const short = {
+      password: '1',
+    };
+    const res1 = await request(app)
+      .put(`/breeders/${testBreeder.id}`)
+      .send(short);
+    expect(res1.statusCode).toEqual(400);
+    expect(res1.body).toEqual({});
+    expect(res1.text).toEqual(expect.stringContaining('password'));
+    // Too long
+    const long = {
+      password:
+        'The password is supposed to be a string between two and thirty characters long, but this sentence is actually longer than thirty characters, so it should be rejected as a password. Duh.',
+    };
+    const res2 = await request(app)
+      .put(`/breeders/${testBreeder.id}`)
+      .send(long);
+    expect(res2.statusCode).toEqual(400);
+    expect(res2.body).toEqual({});
+    expect(res2.text).toEqual(expect.stringContaining('password'));
   });
 
   test('Rejects attempted ID change', async () => {

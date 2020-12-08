@@ -6,6 +6,8 @@ const breeders = [
     lastname: 'Astaire',
     city: 'Marshall',
     state: 'TX',
+    email: 'testB1@email.com',
+    password: 'password',
   },
   {
     id: 'b2',
@@ -13,6 +15,8 @@ const breeders = [
     lastname: 'Rogers',
     city: 'Kingston',
     state: 'RI',
+    email: 'testB2@email.com',
+    password: 'password',
   },
   // b3 has a litter, but no dogs
   {
@@ -21,6 +25,8 @@ const breeders = [
     lastname: 'Python',
     city: 'London',
     state: 'HI',
+    email: 'testB3@email.com',
+    password: 'password',
   },
   // b4 has dogs, but no litters
   {
@@ -29,6 +35,8 @@ const breeders = [
     lastname: 'Lisa',
     city: 'Paris',
     state: 'TX',
+    email: 'testB4@email.com',
+    password: 'password',
   },
   // b5 has neither dogs nor litters
   {
@@ -37,6 +45,8 @@ const breeders = [
     lastname: 'Van Gogh',
     city: 'Brussels',
     state: 'MA',
+    email: 'testB5@email.com',
+    password: 'password',
   },
 ];
 

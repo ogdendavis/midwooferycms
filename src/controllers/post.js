@@ -54,6 +54,12 @@ const post = {
         await asyncUpdatePups(assetId, pupCheck.pups).catch(next);
       }
     }
+    // For breeder creation, check that email provided is unique
+    if (info.noun === 'breeder' && req.body.hasOwnProperty('email')) {
+      if (!(await utils.asyncIsBreederEmailUnique(req))) {
+        return res.status(400).send('Breeder email must be unique');
+      }
+    }
 
     // If we've gotten this far, should be able to make the thing!
     const newAsset = await info.model

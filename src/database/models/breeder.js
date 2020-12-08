@@ -27,6 +27,22 @@ const breeder = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         defaultValue: '',
       },
+      email: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        unique: true,
+        validate: {
+          isEmail: true,
+        },
+      },
+      // Temporary as I build -- password stored in plain text
+      password: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        validate: {
+          len: [5, 30],
+        },
+      },
     },
     {
       paranoid: true,

@@ -4,6 +4,13 @@ const utils = {
     return asset ? true : false;
   },
 
+  asyncIsBreederEmailUnique: async (req) => {
+    const existingBreeder = await req.context.models.Breeder.findOne({
+      where: { email: req.body.email },
+    });
+    return existingBreeder ? false : true;
+  },
+
   capitalize(word) {
     return word.charAt(0).toUpperCase() + word.slice(1);
   },
