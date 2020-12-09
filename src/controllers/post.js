@@ -54,10 +54,15 @@ const post = {
         await asyncUpdatePups(assetId, pupCheck.pups).catch(next);
       }
     }
-    // For breeder creation, check that email provided is unique
-    if (info.noun === 'breeder' && req.body.hasOwnProperty('email')) {
+    // For breeder creation, check that email provided is unique and password is right length
+    if (info.noun === 'breeder') {
       if (!(await utils.asyncIsBreederEmailUnique(req))) {
         return res.status(400).send('Breeder email must be unique');
+      }
+      if (!utils.isPasswordValid(req.body.password)) {
+        return res
+          .status(400)
+          .send('Invalid password: must be between 5-30 characters');
       }
     }
 

@@ -11,6 +11,10 @@ const utils = {
     return existingBreeder ? false : true;
   },
 
+  isPasswordValid(pw) {
+    return pw.length > 4 && pw.length < 31;
+  },
+
   capitalize(word) {
     return word.charAt(0).toUpperCase() + word.slice(1);
   },

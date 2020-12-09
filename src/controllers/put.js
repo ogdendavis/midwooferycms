@@ -31,14 +31,58 @@ const put = {
           )}`
         );
     }
-    // If updating an email address, make sure it's unique!
-    // For breeder creation, check that email provided is unique
-    if (info.noun === 'breeder' && req.body.hasOwnProperty('email')) {
-      if (!(await utils.asyncIsBreederEmailUnique(req))) {
+    // Breeder-only checks
+    if (info.noun === 'breeder') {
+      if (
+        req.body.hasOwnProperty('password') &&
+        !utils.isPasswordValid(req.body.password)
+      ) {
+        return res
+          .status(400)
+          .send('Invalid password: must be 5-30 characters long');
+      }
+      if (
+        req.body.hasOwnProperty('email') &&
+        !(await utils.asyncIsBreederEmailUnique(req))
+      ) {
         return res.status(400).send('Breeder email must be unique');
       }
     }
-    // If a breederId is provided to update, make sure the new value is good
+    // Dog-only checks
+    if (info.noun === 'dog') {
+      // If a litterId is provided to update, try to make the update!
+      if (req.body.hasOwnProperty('litterId')) {
+        const updateSuccess = await asyncUpdateLitters(req, assetValues).catch(
+          next
+        );
+        // Only failure case is if the litterId provided isn't valid
+        if (!updateSuccess) {
+          return res
+            .status(400)
+            .send(
+              `(Status code 400) Can't update litterId: No litter with ID ${req.body.breederId}`
+            );
+        }
+      }
+    }
+    // Litter-only checks
+    if (info.noun === 'litter') {
+      // If sire id or dam id are provided, make sure they're valid!
+      const parentCheck = await asyncCheckLitterParents(req);
+      if (!parentCheck.isValid) {
+        return res
+          .status(400)
+          .send(`(Status code 400) Bad ${parentCheck.error} info sent`);
+      }
+      // Finally, check pups array, if it's there!
+      if (
+        req.body.hasOwnProperty('pups') &&
+        !(await asyncCheckLitterPups(req))
+      ) {
+        return res.status(400).send(`(Status code 400) Bad pups info sent`);
+      }
+    }
+    // If a breederId is provided to update a dog or litter, make sure the new value is good
     if (
       req.body.hasOwnProperty('breederId') &&
       !(await utils
@@ -50,31 +94,6 @@ const put = {
         .send(
           `(Status code 400) Can't update breederId: No breeder with ID ${req.body.breederId}`
         );
-    }
-    // If a litterId is provided to update, try to make the update!
-    if (req.body.hasOwnProperty('litterId')) {
-      const updateSuccess = await asyncUpdateLitters(req, assetValues).catch(
-        next
-      );
-      // Only failure case is if the litterId provided isn't valid
-      if (!updateSuccess) {
-        return res
-          .status(400)
-          .send(
-            `(Status code 400) Can't update litterId: No litter with ID ${req.body.breederId}`
-          );
-      }
-    }
-    // If sire id or dam id are provided, make sure they're valid!
-    const parentCheck = await asyncCheckLitterParents(req);
-    if (!parentCheck.isValid) {
-      return res
-        .status(400)
-        .send(`(Status code 400) Bad ${parentCheck.error} info sent`);
-    }
-    // Finally, check pups array, if it's there!
-    if (req.body.hasOwnProperty('pups') && !(await asyncCheckLitterPups(req))) {
-      return res.status(400).send(`(Status code 400) Bad pups info sent`);
     }
     // If we get here, we can attempt the update -- only failures from here should be data validation from rules defined in database models
     return await info.model
