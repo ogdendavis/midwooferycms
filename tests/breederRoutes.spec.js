@@ -172,26 +172,6 @@ describe('POST /breeders endpoints', () => {
     expect(res.text).toEqual(expect.stringContaining('password'));
   });
 
-  test('Fails if password is too short or long', async () => {
-    // Too short
-    const data = {
-      firstname: 'Fred',
-      lastname: 'Flinstone',
-      email: 'freddy@flinstonesdonthaveemail.com',
-      password: '1234',
-    };
-    const res = await request(app).post('/breeders').send(data);
-    expect(res.statusCode).toEqual(400);
-    expect(res.body).toEqual({});
-    expect(res.text).toEqual(expect.stringContaining('password'));
-    // Too long
-    data.password = '123456789012345678901234567890123';
-    const resLong = await request(app).post('/breeders').send(data);
-    expect(resLong.statusCode).toEqual(400);
-    expect(resLong.body).toEqual({});
-    expect(resLong.text).toEqual(expect.stringContaining('password'));
-  });
-
   test('Fails if bad key sent in update object', async () => {
     const badData = {
       id: 'idontexist',
@@ -212,6 +192,8 @@ describe('POST /breeders endpoints', () => {
       id: testBreeder.id,
       firstname: 'Elvis',
       lastname: 'Presley',
+      password: 'boof',
+      email: 'boo@fakemail.com',
     };
     const res = await request(app).post('/breeders').send(dupeBreeder);
     expect(res.statusCode).toEqual(400);
@@ -358,29 +340,9 @@ describe('PUT /breeders endpoints', () => {
     expect(res.text).toEqual(expect.stringContaining('email'));
   });
 
-  test('Rejects invalid password update', async () => {
-    const testBreeder = utils.randomBreeder();
-    // Too short
-    const short = {
-      password: '1',
-    };
-    const res1 = await request(app)
-      .put(`/breeders/${testBreeder.id}`)
-      .send(short);
-    expect(res1.statusCode).toEqual(400);
-    expect(res1.body).toEqual({});
-    expect(res1.text).toEqual(expect.stringContaining('password'));
-    // Too long
-    const long = {
-      password:
-        'The password is supposed to be a string between two and thirty characters long, but this sentence is actually longer than thirty characters, so it should be rejected as a password. Duh.',
-    };
-    const res2 = await request(app)
-      .put(`/breeders/${testBreeder.id}`)
-      .send(long);
-    expect(res2.statusCode).toEqual(400);
-    expect(res2.body).toEqual({});
-    expect(res2.text).toEqual(expect.stringContaining('password'));
+  test('Correctly updates and hashes password', async () => {
+    /* TODO */
+    // Not sure how to test this, or if I even can before setting up Passport.js
   });
 
   test('Rejects attempted ID change', async () => {

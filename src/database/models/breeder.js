@@ -1,3 +1,5 @@
+import crypto from 'crypto';
+
 const breeder = (sequelize, DataTypes) => {
   const Breeder = sequelize.define(
     'breeder',
@@ -35,17 +37,36 @@ const breeder = (sequelize, DataTypes) => {
           isEmail: true,
         },
       },
-      // Temporary as I build -- password stored in plain text
       password: {
         type: DataTypes.STRING,
-        allowNull: false,
-        validate: {
-          len: [5, 30],
+        get() {
+          return () => this.getDataValue('password');
+        },
+        set(val) {
+          const salt = crypto.randomBytes(16).toString('base64');
+          const pw = crypto
+            .createHash('RSA-SHA256')
+            .update(val)
+            .update(salt)
+            .digest('hex');
+          this.setDataValue('salt', salt);
+          this.setDataValue('password', pw);
+        },
+      },
+      salt: {
+        type: DataTypes.STRING,
+        get() {
+          return () => this.getDataValue('salt');
         },
       },
     },
     {
       paranoid: true,
+      instanceMethods: {
+        passwordCheck: function (pw) {
+          return 'hello';
+        },
+      },
     }
   );
 

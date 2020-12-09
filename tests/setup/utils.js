@@ -4,7 +4,15 @@ const utils = {
   randomFromArray(ar) {
     return ar[Math.floor(Math.random() * ar.length)];
   },
-  dataize(o) {
+  dataize(ob) {
+    // Remove password & salt from object, if sent -- return object from Sequelize won't have them!
+    const o = { ...ob };
+    if (o.hasOwnProperty('password')) {
+      delete o.password;
+    }
+    if (o.hasOwnProperty('salt')) {
+      delete o.salt;
+    }
     return {
       ...o,
       createdAt: expect.anything(),

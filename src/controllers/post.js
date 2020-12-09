@@ -105,19 +105,24 @@ const post = {
       assetInDB.dataValues
     ).catch(next);
 
+    // When restoring, return value from Sequelize will include password and salt. Get rid of them!
+    let returnAsset = { ...assetInDB.dataValues };
+    if (returnAsset.hasOwnProperty('password')) {
+      delete returnAsset.password;
+    }
+    if (returnAsset.hasOwnProperty('salt')) {
+      delete returnAsset.salt;
+    }
+
     // Construct the return object -- will vary by noun restored
     const retObj =
-      info.noun === 'dog'
-        ? assetInDB.dataValues
-        : info.noun === 'breeder'
+      info.noun === 'breeder'
         ? {
-            breeder: assetInDB.dataValues,
+            breeder: returnAsset,
             dogs: associatedRestored.dogs,
             litters: associatedRestored.litters,
           }
-        : info.noun === 'litter'
-        ? assetInDB.dataValues
-        : {};
+        : returnAsset;
 
     return res.status(201).send(retObj);
   },
@@ -133,7 +138,7 @@ const isMissingRequiredArgs = (req, noun) => {
   // Dictionary of required arguments to create asset types
   const argDict = {
     dog: ['name', 'breederId'],
-    breeder: ['firstname', 'lastname'],
+    breeder: ['firstname', 'lastname', 'password', 'email'],
     litter: ['breederId', 'dam'],
   };
   // Check dictionary entry and make sure all required arguments are in req
