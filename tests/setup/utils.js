@@ -63,6 +63,9 @@ const utils = {
   allBreeders() {
     return breeders.map((b) => this.dataize(b));
   },
+  getPassword(breederId) {
+    return breeders.find((b) => b.id === breederId).password;
+  },
 
   randomLitter(args = { hasPups: null, pupId: null }) {
     let pool = this.allLitters();

@@ -44,11 +44,7 @@ const breeder = (sequelize, DataTypes) => {
         },
         set(val) {
           const salt = crypto.randomBytes(16).toString('base64');
-          const pw = crypto
-            .createHash('RSA-SHA256')
-            .update(val)
-            .update(salt)
-            .digest('hex');
+          const pw = Breeder.hashPass(val, salt);
           this.setDataValue('salt', salt);
           this.setDataValue('password', pw);
         },
@@ -62,14 +58,24 @@ const breeder = (sequelize, DataTypes) => {
     },
     {
       paranoid: true,
-      instanceMethods: {
-        passwordCheck: function (pw) {
-          return 'hello';
-        },
-      },
     }
   );
 
+  // Class methods
+  Breeder.hashPass = (pw, salt) => {
+    return crypto
+      .createHash('RSA-SHA256')
+      .update(pw)
+      .update(salt)
+      .digest('hex');
+  };
+
+  // Instance methods
+  Breeder.prototype.passwordCheck = function (plain) {
+    return Breeder.hashPass(plain, this.salt()) === this.password();
+  };
+
+  // Associations
   Breeder.associate = (models) => {
     Breeder.hasMany(models.Dog);
     // When getter functions are created under the hood, the default pluralization of litter is litter. In the context of litters of puppies, this is incorrect. Fix it so that the getter function is the logical getLitters instead of the confusing getLitter
