@@ -30,6 +30,7 @@ app.use((req, res, next) => {
 app.use('/breeders', routes.breeders);
 app.use('/dogs', routes.dogs);
 app.use('/litters', routes.litters);
+app.use('/auth', routes.auth);
 
 // Handle non-existent routes
 app.get('*', (req, res, next) => {
