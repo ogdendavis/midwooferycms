@@ -13,15 +13,24 @@ describe('Login functionality', () => {
       .post('/auth/login')
       .send({ id: testBreeder.id, password });
     expect(res.statusCode).toEqual(200);
-    expect(res.text).toEqual('Successful Login');
+    // Token response will be 3 encoded strings, joined by .
+    expect(res.text).toEqual(expect.stringMatching(/[\w-]*\.[\w-]*.[\w-]*/));
   });
 
-  test('Returns valid response for bad login', async () => {
+  test('Returns valid response for bad password', async () => {
     const testBreeder = utils.randomBreeder();
     const res = await request(app)
       .post('/auth/login')
       .send({ id: testBreeder.id, password: '' });
     expect(res.statusCode).toEqual(403);
     expect(res.text).toEqual('Failed Login');
+  });
+
+  test('Returns 404 for invalid user', async () => {
+    const res = await request(app)
+      .post('/auth/login')
+      .send({ id: 'notavalidid', password: '' });
+    expect(res.statusCode).toEqual(404);
+    expect(res.text).toEqual(expect.stringContaining('credentials'));
   });
 });
