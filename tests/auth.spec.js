@@ -11,7 +11,7 @@ describe('Login functionality', () => {
     const password = utils.getPassword(testBreeder.id);
     const res = await request(app)
       .post('/auth/login')
-      .send({ id: testBreeder.id, password });
+      .send({ email: testBreeder.email, password });
     expect(res.statusCode).toEqual(200);
     // Token response will be 3 encoded strings, joined by .
     expect(res.text).toEqual(expect.stringMatching(/[\w-]*\.[\w-]*.[\w-]*/));
@@ -21,7 +21,7 @@ describe('Login functionality', () => {
     const testBreeder = utils.randomBreeder();
     const res = await request(app)
       .post('/auth/login')
-      .send({ id: testBreeder.id, password: '' });
+      .send({ email: testBreeder.email, password: '' });
     expect(res.statusCode).toEqual(403);
     expect(res.text).toEqual('Failed Login');
   });
@@ -29,7 +29,7 @@ describe('Login functionality', () => {
   test('Returns 404 for invalid user', async () => {
     const res = await request(app)
       .post('/auth/login')
-      .send({ id: 'notavalidid', password: '' });
+      .send({ email: 'bademail', password: '' });
     expect(res.statusCode).toEqual(404);
     expect(res.text).toEqual(expect.stringContaining('credentials'));
   });
