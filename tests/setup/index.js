@@ -15,6 +15,7 @@ expect.extend({
   },
 });
 
+// Fresh database for each test, so test order doesn't affect outcome
 beforeEach(async () => {
   await testDatabaseSetup();
 });

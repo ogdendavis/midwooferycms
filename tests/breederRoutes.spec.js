@@ -5,6 +5,12 @@ import app from '../src/server';
 // Utils to bring in helpers and data from which database was created
 import utils from './setup/utils';
 
+// Add authorization tokens to utils
+import createTokens from './setup/tokens';
+beforeAll(async () => {
+  utils.tokens = await createTokens();
+});
+
 // Varaibles for quick access to allBreeders from utils
 // Capitalized to remind that this is the source of truth
 const Breeders = utils.allBreeders();
@@ -22,14 +28,30 @@ describe('GET /breeders endpoints', () => {
 
   test('GET /breeders/:breederId', async () => {
     const testBreeder = utils.randomBreeder();
+    const testToken = utils.getToken(testBreeder.id);
     // Check a good request first
-    const res = await request(app).get(`/breeders/${testBreeder.id}`);
+    const res = await request(app)
+      .get(`/breeders/${testBreeder.id}`)
+      .set('Authorization', `Bearer ${testToken}`);
     expect(res.statusCode).toEqual(200);
     expect(res.body).toEqual(testBreeder);
-    // Now check a bad one!
-    const badRes = await request(app).get('/breeders/eeniemeenie');
-    expect(badRes.statusCode).toEqual(404);
-    expect(Breeders).not.toContainEqual(badRes.body);
+  });
+
+  test('GET /breeders/:breederId rejects a request without a token', async () => {
+    const testBreeder = utils.randomBreeder();
+    // Check a good request first
+    const res = await request(app).get(`/breeders/${testBreeder.id}`);
+    expect(res.statusCode).toEqual(401);
+    expect(res.text).toEqual('Missing token');
+  });
+
+  test('GET /breeders/:breederId rejects a request with an invalid token', async () => {
+    const testBreeder = utils.randomBreeder();
+    const res = await request(app)
+      .get(`/breeders/${testBreeder.id}`)
+      .set('Authorization', 'Bearer McBadtoken.is.sobad');
+    expect(res.statusCode).toEqual(500);
+    expect(res.body.message).toEqual('invalid token');
   });
 
   test('GET /breeders/:breederId/dogs for breeder with dogs', async () => {
@@ -200,10 +222,6 @@ describe('POST /breeders endpoints', () => {
     };
     const res = await request(app).post('/breeders').send(badData);
     expect(res.statusCode).toEqual(400);
-    // Make sure breeder wasn't created
-    const getRes = await request(app).get(`/breeders/${badData.id}`);
-    expect(getRes.statusCode).toEqual(404);
-    expect(getRes.body).toEqual({});
   });
 
   test('Rejects a request with already-used ID', async () => {
@@ -227,6 +245,7 @@ describe('POST /breeders endpoints', () => {
       hasDogs: true,
       hasLitters: true,
     });
+    const testToken = utils.getToken(testBreeder.id);
     // Get copies of the litters and dogs, too
     const testLitters = utils.allLitters({ breederId: testBreeder.id });
     const testDogs = utils.allDogs({ breederId: testBreeder.id });
@@ -239,9 +258,7 @@ describe('POST /breeders endpoints', () => {
     expect(res.body.breeder).toEqual(testBreeder);
     expect(res.body.dogs).toEqual(testDogs);
     expect(res.body.litters).toEqual(testLitters);
-    // And double-check with quick GETs
-    const getRes = await request(app).get(`/breeders/${testBreeder.id}`);
-    expect(getRes.statusCode).toEqual(200);
+    // And make sure dogs and litters were restored, too
     const getDogRes = await request(app).get(
       `/breeders/${testBreeder.id}/dogs`
     );
@@ -268,6 +285,7 @@ describe('POST /breeders endpoints', () => {
       hasDogs: false,
       hasLitters: false,
     });
+    const testToken = utils.getToken(testBreeder);
     const deleteRes = await request(app).delete(`/breeders/${testBreeder.id}`);
     expect(deleteRes.statusCode).toEqual(200);
     const res = await request(app).post(`/breeders/${testBreeder.id}/restore`);
@@ -275,9 +293,6 @@ describe('POST /breeders endpoints', () => {
     expect(res.body.breeder).toEqual(testBreeder);
     expect(res.body.dogs).toEqual([]);
     expect(res.body.litters).toEqual([]);
-    const getRes = await request(app).get(`/breeders/${testBreeder.id}`);
-    expect(getRes.statusCode).toEqual(200);
-    expect(getRes.body).toEqual(testBreeder);
   });
 
   test('POST /breeders/:breederId/restore ignores active breeder', async () => {
@@ -312,6 +327,7 @@ describe('PUT /breeders endpoints', () => {
       email: 'completelyuniqueemail@gmale.net',
     };
     const testBreeder = utils.randomBreeder();
+    const testToken = utils.getToken(testBreeder.id);
     const res = await request(app)
       .put(`/breeders/${testBreeder.id}`)
       .send(updates);
@@ -325,7 +341,9 @@ describe('PUT /breeders endpoints', () => {
       expect(res.body.result[key]).toEqual(updates[key]);
     }
     // Confirm that the data matches on a follow-up GET request
-    const getRes = await request(app).get(`/breeders/${testBreeder.id}`);
+    const getRes = await request(app)
+      .get(`/breeders/${testBreeder.id}`)
+      .set('Authorization', `Bearer ${testToken}`);
     expect(getRes.body).toEqual(res.body.result);
   });
 
@@ -437,10 +455,6 @@ describe('DELETE /dogs endpoint', () => {
     expect(res.statusCode).toEqual(200);
     // Response should show that the correct breeder has been removed
     expect(res.body.breeder).toEqual(testBreeder);
-    // We shouldn't be able to find the breeder with a GET request
-    const getRes = await request(app).get(`/breeders/${testBreeder.id}`);
-    expect(getRes.statusCode).toEqual(404);
-    expect(getRes.body).toEqual({});
     // And we should have one less breeder overall
     const getAllRes = await request(app).get('/breeders');
     expect(getAllRes.body.length).toEqual(Breeders.length - 1);

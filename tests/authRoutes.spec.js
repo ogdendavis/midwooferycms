@@ -22,7 +22,7 @@ describe('Login functionality', () => {
     const res = await request(app)
       .post('/auth/login')
       .send({ email: testBreeder.email, password: '' });
-    expect(res.statusCode).toEqual(403);
+    expect(res.statusCode).toEqual(401);
     expect(res.text).toEqual('Failed Login');
   });
 

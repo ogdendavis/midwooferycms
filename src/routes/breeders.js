@@ -8,7 +8,7 @@ import controllers from '../controllers';
 router.get('/', controllers.get.all);
 
 // Get one breeder by id
-router.get('/:breederId', controllers.get.byId);
+router.get('/:breederId', controllers.auth.checkToken, controllers.get.byId);
 
 // Get all of a breeder's dogs
 router.get('/:breederId/dogs', controllers.get.associated);

@@ -66,6 +66,12 @@ const utils = {
   getPassword(breederId) {
     return breeders.find((b) => b.id === breederId).password;
   },
+  getToken(breederId) {
+    return this.tokens[breederId] ? this.tokens[breederId] : false;
+  },
+  tokens: {
+    /* Populated asynchronously when utils are loaded in each test file that needs auth */
+  },
 
   randomLitter(args = { hasPups: null, pupId: null }) {
     let pool = this.allLitters();
