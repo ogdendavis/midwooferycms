@@ -17,7 +17,8 @@ describe('GET /dogs endpoints', () => {
   test('GET /dogs', async () => {
     const res = await request(app).get('/dogs');
     expect(res.statusCode).toEqual(200);
-    expect(res.body).toEqual(Dogs);
+    expect(res.body.noun).toEqual('dog');
+    expect(res.body.count).toEqual(Dogs.length);
   });
 
   test('GET /dogs/:dogId', async () => {
@@ -332,7 +333,7 @@ describe('DELETE /dogs endpoint', () => {
     expect(getRes.body).toEqual({});
     // Confirm that dog isn't showing in all dogs list, either
     const getAllRes = await request(app).get('/dogs');
-    expect(getAllRes.body.length).toEqual(Dogs.length - 1);
+    expect(getAllRes.body.count).toEqual(Dogs.length - 1);
   });
 
   test('Removes dog from associated litter', async () => {
@@ -364,6 +365,6 @@ describe('DELETE /dogs endpoint', () => {
     expect(res.statusCode).toEqual(404);
     // Database should still have all dogs
     const getRes = await request(app).get(`/dogs`);
-    expect(getRes.body.length).toEqual(Dogs.length);
+    expect(getRes.body.count).toEqual(Dogs.length);
   });
 });

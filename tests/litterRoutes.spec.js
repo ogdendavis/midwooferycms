@@ -13,7 +13,8 @@ describe('GET /litters endpoints', () => {
   test('GET /breeders', async () => {
     const res = await request(app).get('/litters');
     expect(res.statusCode).toEqual(200);
-    expect(res.body).toEqual(utils.allLitters());
+    expect(res.body.noun).toEqual('litter');
+    expect(res.body.count).toEqual(utils.allLitters().length);
   });
 
   test('GET /litters/:litterId with valid id', async () => {
@@ -573,6 +574,6 @@ describe('DELETE /litters endpoint', () => {
     expect(res.text).toEqual(expect.stringContaining('No litter with ID'));
     // Make sure we still have all litters!
     const allRes = await request(app).get('/litters');
-    expect(allRes.body).toEqual(utils.allLitters());
+    expect(allRes.body.count).toEqual(utils.allLitters().length);
   });
 });

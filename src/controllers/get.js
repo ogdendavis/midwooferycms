@@ -2,9 +2,13 @@ import utils from './utils';
 
 const get = {
   all: async (req, res, next) => {
+    // Just return a count of how many of that noun we have, for now
     const info = utils.getAssetInfo(req);
-    const allAssets = await info.model.findAll().catch(next);
-    return res.send(allAssets);
+    const count = await info.model.count().catch(next);
+    return res.send({
+      noun: info.noun,
+      count,
+    });
   },
 
   byId: async (req, res, next) => {

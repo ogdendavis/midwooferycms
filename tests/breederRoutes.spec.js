@@ -21,9 +21,11 @@ const Breeders = utils.allBreeders();
 
 describe('GET /breeders endpoints', () => {
   test('GET /breeders', async () => {
+    // Get now just returns how many there are of a thing
     const res = await request(app).get('/breeders');
     expect(res.statusCode).toEqual(200);
-    expect(res.body).toEqual(Breeders);
+    expect(res.body.noun).toEqual('breeder');
+    expect(res.body.count).toEqual(Breeders.length);
   });
 
   test('GET /breeders/:breederId', async () => {
@@ -457,7 +459,7 @@ describe('DELETE /dogs endpoint', () => {
     expect(res.body.breeder).toEqual(testBreeder);
     // And we should have one less breeder overall
     const getAllRes = await request(app).get('/breeders');
-    expect(getAllRes.body.length).toEqual(Breeders.length - 1);
+    expect(getAllRes.body.count).toEqual(Breeders.length - 1);
   });
 
   test('Fails with bad ID', async () => {
@@ -465,7 +467,7 @@ describe('DELETE /dogs endpoint', () => {
     expect(res.statusCode).toEqual(404);
     // GET should show all breeders
     const getRes = await request(app).get('/breeders');
-    expect(getRes.body.length).toEqual(Breeders.length);
+    expect(getRes.body.count).toEqual(Breeders.length);
   });
 
   test('Breeder deletion also deletes associated dogs', async () => {
