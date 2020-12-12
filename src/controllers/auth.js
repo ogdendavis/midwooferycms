@@ -13,7 +13,7 @@ const auth = {
     const correctPassword = breeder.passwordCheck(req.body.password);
     // Generate the token and return it, if successful
     if (correctPassword) {
-      jwt.sign({ id: req.body.id }, process.env.JWT_KEY, (err, token) => {
+      jwt.sign({ id: breeder.id }, process.env.JWT_KEY, (err, token) => {
         if (err) {
           return res.status(500).send(err);
         } else {
@@ -25,7 +25,7 @@ const auth = {
     }
   },
 
-  checkToken: async (req, res, next) => {
+  checkBreederToken: async (req, res, next) => {
     const { authorization } = req.headers;
     const token = authorization && authorization.split(' ')[1];
     if (!token) {
@@ -34,9 +34,12 @@ const auth = {
     jwt.verify(token, process.env.JWT_KEY, (err, user) => {
       if (err) {
         return res.status(500).send(err);
-      } else {
+      } else if (user.id === req.params.breederId) {
         req.user = user;
         next();
+      } else {
+        // Token is valid, but doesn't match breederId in params
+        return res.status(403).send('Token does not match breederId');
       }
     });
   },

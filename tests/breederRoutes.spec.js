@@ -56,6 +56,19 @@ describe('GET /breeders endpoints', () => {
     expect(res.body.message).toEqual('invalid token');
   });
 
+  test('GET /breeders/:breederId rejects a request with a valid token for the wrong breeder', async () => {
+    // Use hasLitters to make sure we have two different breeders
+    const testBreeder = utils.randomBreeder({ hasLitters: true });
+    const wrongBreeder = utils.randomBreeder({ hasLitters: false });
+    const wrongToken = utils.getToken(wrongBreeder.id);
+    const res = await request(app)
+      .get(`/breeders/${testBreeder.id}`)
+      .set('Authorization', `Bearer ${wrongToken}`);
+    // console.log(res);
+    expect(res.statusCode).toEqual(403);
+    expect(res.text).toEqual('Token does not match breederId');
+  });
+
   test('GET /breeders/:breederId/dogs for breeder with dogs', async () => {
     // Get a breeder that we know to have dogs
     const testBreeder = utils.randomBreeder({ hasDogs: true });
