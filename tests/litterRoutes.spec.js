@@ -5,6 +5,12 @@ import app from '../src/server';
 // Utils to bring in helpers and data from which database was created
 import utils from './setup/utils';
 
+// Add authorization tokens to utils
+import createTokens from './setup/tokens';
+beforeAll(async () => {
+  utils.tokens = await createTokens();
+});
+
 /*
  * GET
  */
@@ -276,9 +282,9 @@ describe('POST /litters endpoints', () => {
     const res = await request(app).post(`/litters/${testLitter.id}/restore`);
     expect(res.statusCode).toEqual(201);
     // Removal of litter from breeder list tested in DELETE below, so assume that went properly and just test re-adding on litter resetoration
-    const bRes = await request(app).get(
-      `/breeders/${testLitter.breederId}/litters`
-    );
+    const bRes = await request(app)
+      .get(`/breeders/${testLitter.breederId}/litters`)
+      .set('Authorization', `Bearer ${testLitter.breederId}`);
     expect(bRes.statusCode).toEqual(200);
     expect(bRes.body).toContainEqual(testLitter);
   });

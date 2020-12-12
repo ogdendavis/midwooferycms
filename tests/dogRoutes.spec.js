@@ -5,6 +5,12 @@ import app from '../src/server';
 // Utils to bring in helpers and data from which database was created
 import utils from './setup/utils';
 
+// Add authorization tokens to utils
+import createTokens from './setup/tokens';
+beforeAll(async () => {
+  utils.tokens = await createTokens();
+});
+
 // Variable for quick access to data from allDogs in utils
 // Capitalized to remind that this is the source of truth
 const Dogs = utils.allDogs();
@@ -159,9 +165,9 @@ describe('POST /dogs endpoints', () => {
     expect(res.statusCode).toEqual(201);
     expect(res.body).toEqual(testDog);
     // Dog should now show up again in breeder's dogs listing
-    const breederRes = await request(app).get(
-      `/breeders/${testDog.breederId}/dogs`
-    );
+    const breederRes = await request(app)
+      .get(`/breeders/${testDog.breederId}/dogs`)
+      .set('Authorization', `Bearer ${utils.getToken(res.body.breederId)}`);
     expect(breederRes.body).toContainEqual(testDog);
     // And in litter's pup list
     const litterRes = await request(app).get(`/litters/${testDog.litterId}`);
@@ -179,9 +185,9 @@ describe('POST /dogs endpoints', () => {
     // Just to quadruple-check, no litterId has been added somehow
     expect(res.body.litterId).toEqual('');
     // Dog should now show up again in breeder's dogs listing
-    const breederRes = await request(app).get(
-      `/breeders/${testDog.breederId}/dogs`
-    );
+    const breederRes = await request(app)
+      .get(`/breeders/${testDog.breederId}/dogs`)
+      .set('Authorization', `Bearer ${utils.getToken(testDog.breederId)}`);
     expect(breederRes.body).toContainEqual(testDog);
   });
 

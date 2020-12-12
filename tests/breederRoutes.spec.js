@@ -75,7 +75,9 @@ describe('GET /breeders endpoints', () => {
     // Pull all dogs that are associated with the test breeder
     const testDogs = utils.allDogs({ breederId: testBreeder.id });
     // Check the database!
-    const res = await request(app).get(`/breeders/${testBreeder.id}/dogs`);
+    const res = await request(app)
+      .get(`/breeders/${testBreeder.id}/dogs`)
+      .set('Authorization', `Bearer ${utils.getToken(testBreeder.id)}`);
     expect(res.statusCode).toEqual(200);
     expect(res.body).toEqual(testDogs);
   });
@@ -83,40 +85,50 @@ describe('GET /breeders endpoints', () => {
   test('GET /breeders/:breederId/dogs for breeder without dogs', async () => {
     // We know that the breeder with id b3 has no dogs when the database is created
     const testBreeder = Breeders.filter((b) => b.id === 'b3')[0];
-    const res = await request(app).get(`/breeders/${testBreeder.id}/dogs`);
+    const res = await request(app)
+      .get(`/breeders/${testBreeder.id}/dogs`)
+      .set('Authorization', `Bearer ${utils.getToken(testBreeder.id)}`);
     expect(res.statusCode).toEqual(204); // Indicates successful request returning no data
     expect(res.body).toEqual({}); // Empty object
   });
 
   test('GET /breeders/:breederId/dogs for bad breeder id', async () => {
-    const badRes = await request(app).get('/breeders/nopezorz/dogs');
-    expect(badRes.statusCode).toEqual(404);
-    expect(badRes.text).toEqual(expect.stringContaining('No breeder with ID'));
+    const badRes = await request(app)
+      .get('/breeders/nopezorz/dogs')
+      .set(
+        'Authorization',
+        `Bearer token.invalidformat.buthteresnobreederassociatedwithit`
+      );
+    expect(badRes.statusCode).toEqual(500);
+    expect(badRes.body.message).toEqual(expect.stringContaining('token'));
   });
 
   test('GET /breeders/:breederId/litters for breeder with litters', async () => {
     const testBreeder = utils.randomBreeder({ hasLitters: true });
     const testLitters = utils.allLitters({ breederId: testBreeder.id });
-    const res = await request(app).get(`/breeders/${testBreeder.id}/litters`);
+    const res = await request(app)
+      .get(`/breeders/${testBreeder.id}/litters`)
+      .set('Authorization', `Bearer ${utils.getToken(testBreeder.id)}`);
     expect(res.statusCode).toEqual(200);
     expect(res.body).toEqual(testLitters);
   });
 
   test('GET /breeders/:breederId/litters for breeder without litters', async () => {
     const testBreeder = utils.randomBreeder({ hasLitters: false });
-    const res = await request(app).get(`/breeders/${testBreeder.id}/litters`);
+    const res = await request(app)
+      .get(`/breeders/${testBreeder.id}/litters`)
+      .set('Authorization', `Bearer ${utils.getToken(testBreeder.id)}`);
     // Successful request, but no litters, so return 204
     expect(res.statusCode).toEqual(204);
     expect(res.body).toEqual({});
   });
 
   test('GET /breeders/:breederId/litters for bad breeder id', async () => {
-    const res = await request(app).get(
-      '/breeders/mynameisinigomontoya/litters'
-    );
-    expect(res.statusCode).toEqual(404);
-    expect(res.body).toEqual({});
-    expect(res.text).toEqual(expect.stringContaining('No breeder with ID'));
+    const res = await request(app)
+      .get('/breeders/mynameisinigomontoya/litters')
+      .set('Authorization', `Bearer nobreeder.has.notoken`);
+    expect(res.statusCode).toEqual(500);
+    expect(res.body.message).toEqual(expect.stringContaining('token'));
   });
 });
 
@@ -322,9 +334,11 @@ describe('POST /breeders endpoints', () => {
   });
 
   test('POST /breeders/:breederId/restore rejects bad id', async () => {
-    const res = await request(app).post(`/breeders/wakkawakkawakka/restore`);
-    expect(res.statusCode).toEqual(404);
-    expect(res.text).toEqual(expect.stringContaining(`No breeder with ID`));
+    const res = await request(app)
+      .post(`/breeders/wakkawakkawakka/restore`)
+      .set('Authorization', 'Bearer token.format.good');
+    expect(res.statusCode).toEqual(500);
+    expect(res.body.message).toEqual(expect.stringContaining(`token`));
   });
 });
 
@@ -345,6 +359,7 @@ describe('PUT /breeders endpoints', () => {
     const testToken = utils.getToken(testBreeder.id);
     const res = await request(app)
       .put(`/breeders/${testBreeder.id}`)
+      .set('Authorization', `Bearer ${testToken}`)
       .send(updates);
     expect(res.statusCode).toEqual(200);
     // Updated object should show all fields in data as being updated
@@ -374,6 +389,7 @@ describe('PUT /breeders endpoints', () => {
     };
     const res = await request(app)
       .put(`/breeders/${testBreeder.id}`)
+      .set('Authorization', `Bearer ${utils.getToken(testBreeder.id)}`)
       .send(data);
     expect(res.statusCode).toEqual(400);
     expect(res.body).toEqual({});
@@ -387,6 +403,7 @@ describe('PUT /breeders endpoints', () => {
     };
     const res = await request(app)
       .put(`/breeders/${testBreeder.id}`)
+      .set('Authorization', `Bearer ${utils.getToken(testBreeder.id)}`)
       .send(data);
     expect(res.statusCode).toEqual(400);
     expect(res.body).toEqual({});
@@ -406,6 +423,7 @@ describe('PUT /breeders endpoints', () => {
     };
     const res1 = await request(app)
       .put(`/breeders/${testBreeder.id}`)
+      .set('Authorization', `Bearer ${utils.getToken(testBreeder.id)}`)
       .send(short);
     expect(res1.statusCode).toEqual(400);
     expect(res1.body).toEqual({});
@@ -417,6 +435,7 @@ describe('PUT /breeders endpoints', () => {
     };
     const res2 = await request(app)
       .put(`/breeders/${testBreeder.id}`)
+      .set('Authorization', `Bearer ${utils.getToken(testBreeder.id)}`)
       .send(long);
     expect(res2.statusCode).toEqual(400);
     expect(res2.body).toEqual({});
@@ -428,6 +447,7 @@ describe('PUT /breeders endpoints', () => {
     const testBreeder = utils.randomBreeder();
     const res = await request(app)
       .put(`/breeders/${testBreeder.id}`)
+      .set('Authorization', `Bearer ${utils.getToken(testBreeder.id)}`)
       .send(badUpdate);
     expect(res.statusCode).toEqual(400);
     expect(res.text).toEqual(expect.stringContaining('id'));
@@ -443,14 +463,18 @@ describe('PUT /breeders endpoints', () => {
     // Should reject with all sent
     const res1 = await request(app)
       .put(`/breeders/${testBreeder.id}`)
+      .set('Authorization', `Bearer ${utils.getToken(testBreeder.id)}`)
       .send(mixedUpdate);
     expect(res1.statusCode).toEqual(400);
     expect(res1.text).toEqual(expect.stringContaining('id, favorite_color'));
     // Should reject without ID sent
-    const res2 = await request(app).put(`/breeders/${testBreeder.id}`).send({
-      city: mixedUpdate.city,
-      favorite_color: mixedUpdate.favorite_color,
-    });
+    const res2 = await request(app)
+      .put(`/breeders/${testBreeder.id}`)
+      .set('Authorization', `Bearer ${utils.getToken(testBreeder.id)}`)
+      .send({
+        city: mixedUpdate.city,
+        favorite_color: mixedUpdate.favorite_color,
+      });
     expect(res2.statusCode).toEqual(400);
     expect(res2.text).toEqual(expect.stringContaining('favorite_color'));
     // Make sure city wasn't changed!
@@ -466,7 +490,9 @@ describe('PUT /breeders endpoints', () => {
 describe('DELETE /dogs endpoint', () => {
   test('Deletes a breeder', async () => {
     const testBreeder = utils.randomBreeder();
-    const res = await request(app).delete(`/breeders/${testBreeder.id}`);
+    const res = await request(app)
+      .delete(`/breeders/${testBreeder.id}`)
+      .set('Authorization', `Bearer ${utils.getToken(testBreeder.id)}`);
     expect(res.statusCode).toEqual(200);
     // Response should show that the correct breeder has been removed
     expect(res.body.breeder).toEqual(testBreeder);
@@ -476,8 +502,12 @@ describe('DELETE /dogs endpoint', () => {
   });
 
   test('Fails with bad ID', async () => {
-    const res = await request(app).delete('/breeders/bb8');
-    expect(res.statusCode).toEqual(404);
+    const res = await request(app)
+      .delete('/breeders/bb8')
+      .set('Authorization', 'Bearer faketoken.with.validformat');
+    // Since there is no breeder with that ID, token is invalid
+    expect(res.statusCode).toEqual(500);
+    expect(res.body.message).toEqual('invalid token');
     // GET should show all breeders
     const getRes = await request(app).get('/breeders');
     expect(getRes.body.count).toEqual(Breeders.length);
@@ -486,11 +516,15 @@ describe('DELETE /dogs endpoint', () => {
   test('Breeder deletion also deletes associated dogs', async () => {
     const testBreeder = utils.randomBreeder({ hasDogs: true });
     const testDogs = utils.allDogs({ breederId: testBreeder.id });
-    const resB = await request(app).delete(`/breeders/${testBreeder.id}`);
+    const resB = await request(app)
+      .delete(`/breeders/${testBreeder.id}`)
+      .set('Authorization', `Bearer ${utils.getToken(testBreeder.id)}`);
     // Check that breeder deletion returns dog data
     expect(resB.body.dogs).toEqual(testDogs);
     // Try to get all dogs from breeder -- since breeder is gone, should get 404
-    const resD = await request(app).get(`/breeders/${testBreeder.id}/dogs`);
+    const resD = await request(app)
+      .get(`/breeders/${testBreeder.id}/dogs`)
+      .set('Authorization', `Bearer ${utils.getToken(testBreeder.id)}`);
     expect(resD.statusCode).toEqual(404);
     expect(resD.body).toEqual({});
     // Try to get each individual dog -- they shouldn't be there!
@@ -504,11 +538,15 @@ describe('DELETE /dogs endpoint', () => {
   test('Breeder deletion also deletes associated litters', async () => {
     const testBreeder = utils.randomBreeder({ hasLitters: true });
     const testLitters = utils.allLitters({ breederId: testBreeder.id });
-    const resB = await request(app).delete(`/breeders/${testBreeder.id}`);
+    const resB = await request(app)
+      .delete(`/breeders/${testBreeder.id}`)
+      .set('Authorization', `Bearer ${utils.getToken(testBreeder.id)}`);
     // Check that deletion return includes litter data
     expect(resB.body.litters).toEqual(testLitters);
     // Try to get all litters from breeder -- since breeder is deleted, should get 404
-    const resL = await request(app).get(`/breeders/${testBreeder.id}/litters`);
+    const resL = await request(app)
+      .get(`/breeders/${testBreeder.id}/litters`)
+      .set('Authorization', `Bearer ${utils.getToken(testBreeder.id)}`);
     expect(resL.statusCode).toEqual(404);
     expect(resL.body).toEqual({});
     // Check litters endpoints, too
