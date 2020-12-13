@@ -11,10 +11,6 @@ const utils = {
     return existingBreeder ? false : true;
   },
 
-  isPasswordValid(pw) {
-    return pw.length > 4 && pw.length < 31;
-  },
-
   capitalize(word) {
     return word.charAt(0).toUpperCase() + word.slice(1);
   },
@@ -38,6 +34,28 @@ const utils = {
     // Take the baseUrl of a req object and return the singular noun
     // e.g. baseUrl of request is '/dogs', noun is 'dog'
     return baseUrl.slice(1, -1);
+  },
+
+  isPasswordValid(pw) {
+    return pw.length > 4 && pw.length < 31;
+  },
+
+  sanitizeBreederObj(bo) {
+    // Early return if we get undefined or empty object
+    if (!bo) {
+      return bo;
+    }
+    const retObj = bo.hasOwnProperty('dataValues')
+      ? { ...bo.dataValues }
+      : { ...bo };
+    // If not superuser, remove that property
+    if (retObj.hasOwnProperty('superuser') && retObj.superuser !== true) {
+      delete retObj.superuser;
+    }
+    // Remove password and salt
+    delete retObj.password;
+    delete retObj.salt;
+    return retObj;
   },
 };
 

@@ -25,7 +25,7 @@ describe('GET /breeders endpoints', () => {
     const res = await request(app).get('/breeders');
     expect(res.statusCode).toEqual(200);
     expect(res.body.noun).toEqual('breeder');
-    expect(res.body.count).toEqual(Breeders.length);
+    expect(res.body.count).toEqual(Breeders.length + 1); // +1 for superuser
   });
 
   test('GET /breeders/:breederId', async () => {
@@ -266,6 +266,7 @@ describe('POST /breeders endpoints', () => {
   });
 
   // Endpoint to restore a deleted breeder, plus associated dogs/litters
+  // ONLY SUPERUSER CAN RESTORE DELETED BREEDER
   test('POST /breeders/:breederId/restore restores deleted breeder with dogs & litters', async () => {
     // Get a known breeder with litters and dogs
     const testBreeder = utils.randomBreeder({
@@ -277,22 +278,26 @@ describe('POST /breeders endpoints', () => {
     const testLitters = utils.allLitters({ breederId: testBreeder.id });
     const testDogs = utils.allDogs({ breederId: testBreeder.id });
     // Delete the breeder and quickly confirm via status codes
-    const deleteRes = await request(app).delete(`/breeders/${testBreeder.id}`);
+    const deleteRes = await request(app)
+      .delete(`/breeders/${testBreeder.id}`)
+      .set('Authorization', `Bearer ${testToken}`);
     expect(deleteRes.statusCode).toEqual(200);
     // Now, undelete the breeder!
-    const res = await request(app).post(`/breeders/${testBreeder.id}/restore`);
+    const res = await request(app)
+      .post(`/breeders/${testBreeder.id}/restore`)
+      .set('Authorization', `Bearer ${utils.getToken(utils.superuser().id)}`);
     expect(res.statusCode).toEqual(201);
     expect(res.body.breeder).toEqual(testBreeder);
     expect(res.body.dogs).toEqual(testDogs);
     expect(res.body.litters).toEqual(testLitters);
     // And make sure dogs and litters were restored, too
-    const getDogRes = await request(app).get(
-      `/breeders/${testBreeder.id}/dogs`
-    );
+    const getDogRes = await request(app)
+      .get(`/breeders/${testBreeder.id}/dogs`)
+      .set('Authorization', `Bearer ${testToken}`);
     expect(getDogRes.statusCode).toEqual(200);
-    const getLitterRes = await request(app).get(
-      `/breeders/${testBreeder.id}/litters`
-    );
+    const getLitterRes = await request(app)
+      .get(`/breeders/${testBreeder.id}/litters`)
+      .set('Authorization', `Bearer ${testToken}`);
     expect(getLitterRes.statusCode).toEqual(200);
     // Make sure dogs and litters are back at their respective endpoints
     const recheckDogRes = await request(app).get(
@@ -312,10 +317,13 @@ describe('POST /breeders endpoints', () => {
       hasDogs: false,
       hasLitters: false,
     });
-    const testToken = utils.getToken(testBreeder);
-    const deleteRes = await request(app).delete(`/breeders/${testBreeder.id}`);
+    const deleteRes = await request(app)
+      .delete(`/breeders/${testBreeder.id}`)
+      .set('Authorization', `Bearer ${utils.getToken(testBreeder.id)}`);
     expect(deleteRes.statusCode).toEqual(200);
-    const res = await request(app).post(`/breeders/${testBreeder.id}/restore`);
+    const res = await request(app)
+      .post(`/breeders/${testBreeder.id}/restore`)
+      .set('Authorization', `Bearer ${utils.getToken('super')}`);
     expect(res.statusCode).toEqual(201);
     expect(res.body.breeder).toEqual(testBreeder);
     expect(res.body.dogs).toEqual([]);
@@ -324,7 +332,9 @@ describe('POST /breeders endpoints', () => {
 
   test('POST /breeders/:breederId/restore ignores active breeder', async () => {
     const testBreeder = utils.randomBreeder();
-    const res = await request(app).post(`/breeders/${testBreeder.id}/restore`);
+    const res = await request(app)
+      .post(`/breeders/${testBreeder.id}/restore`)
+      .set('Authorization', `Bearer ${utils.getToken('super')}`);
     expect(res.statusCode).toEqual(405);
     expect(res.text).toEqual(
       expect.stringContaining(
@@ -498,7 +508,7 @@ describe('DELETE /dogs endpoint', () => {
     expect(res.body.breeder).toEqual(testBreeder);
     // And we should have one less breeder overall
     const getAllRes = await request(app).get('/breeders');
-    expect(getAllRes.body.count).toEqual(Breeders.length - 1);
+    expect(getAllRes.body.count).toEqual(Breeders.length); // superuser is also here, so no need to subtract 1
   });
 
   test('Fails with bad ID', async () => {
@@ -510,7 +520,7 @@ describe('DELETE /dogs endpoint', () => {
     expect(res.body.message).toEqual('invalid token');
     // GET should show all breeders
     const getRes = await request(app).get('/breeders');
-    expect(getRes.body.count).toEqual(Breeders.length);
+    expect(getRes.body.count).toEqual(Breeders.length + 1); // +1 for superuser
   });
 
   test('Breeder deletion also deletes associated dogs', async () => {

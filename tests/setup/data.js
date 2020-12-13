@@ -50,6 +50,15 @@ const breeders = [
   },
 ];
 
+const superuser = {
+  id: 'super',
+  firstname: 'Fedric',
+  lastname: 'Ciggy',
+  email: 'super@email.com',
+  password: 'extrasecurepassword',
+  superuser: true,
+};
+
 const litters = [
   {
     id: 'l1',
@@ -140,4 +149,4 @@ const dogs = [
   },
 ];
 
-export { breeders, litters, dogs };
+export { breeders, superuser, litters, dogs };

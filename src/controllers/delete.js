@@ -43,7 +43,7 @@ const del = {
     const retObj =
       info.noun === 'breeder'
         ? {
-            breeder: asset,
+            breeder: utils.sanitizeBreederObj(asset),
             dogs: deletedAssociations.dogs,
             litters: deletedAssociations.litters,
           }

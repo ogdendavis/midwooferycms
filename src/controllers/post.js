@@ -73,7 +73,9 @@ const post = {
         id: assetId,
       })
       .catch(next);
-    return res.status(201).send(newAsset);
+    const retObj =
+      info.noun === 'breeder' ? utils.sanitizeBreederObj(newAsset) : newAsset;
+    return res.status(201).send(retObj);
   },
 
   restore: async (req, res, next) => {
@@ -123,7 +125,7 @@ const post = {
     const retObj =
       info.noun === 'breeder'
         ? {
-            breeder: returnAsset,
+            breeder: utils.sanitizeBreederObj(returnAsset),
             dogs: associatedRestored.dogs,
             litters: associatedRestored.litters,
           }

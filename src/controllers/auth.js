@@ -13,7 +13,12 @@ const auth = {
     const correctPassword = breeder.passwordCheck(req.body.password);
     // Generate the token and return it, if successful
     if (correctPassword) {
-      jwt.sign({ id: breeder.id }, process.env.JWT_KEY, (err, token) => {
+      // If user is superuser, add that info to the jwt
+      const payload = {
+        id: breeder.id,
+        ...(breeder.superuser && { superuser: breeder.superuser }),
+      };
+      jwt.sign(payload, process.env.JWT_KEY, (err, token) => {
         if (err) {
           return res.status(500).send(err);
         } else {
@@ -34,11 +39,11 @@ const auth = {
     jwt.verify(token, process.env.JWT_KEY, (err, user) => {
       if (err) {
         return res.status(500).send(err);
-      } else if (user.id === req.params.breederId) {
+      } else if (user.id === req.params.breederId || user.superuser) {
+        // Authorize if user in jwt matches breederId, or is superuser
         req.user = user;
         next();
       } else {
-        // Token is valid, but doesn't match breederId in params
         return res.status(403).send('Token does not match breederId');
       }
     });

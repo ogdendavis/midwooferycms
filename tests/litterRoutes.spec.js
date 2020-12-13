@@ -284,7 +284,7 @@ describe('POST /litters endpoints', () => {
     // Removal of litter from breeder list tested in DELETE below, so assume that went properly and just test re-adding on litter resetoration
     const bRes = await request(app)
       .get(`/breeders/${testLitter.breederId}/litters`)
-      .set('Authorization', `Bearer ${testLitter.breederId}`);
+      .set('Authorization', `Bearer ${utils.getToken(testLitter.breederId)}`);
     expect(bRes.statusCode).toEqual(200);
     expect(bRes.body).toContainEqual(testLitter);
   });

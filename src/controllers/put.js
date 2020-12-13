@@ -104,7 +104,10 @@ const put = {
       .then((updatedAsset) => {
         return res.status(200).send({
           updated: goodKeys,
-          result: updatedAsset[1][0],
+          result:
+            info.noun === 'breeder'
+              ? utils.sanitizeBreederObj(updatedAsset[1][0])
+              : updatedAsset[1][0],
         });
       })
       .catch((err) => {

@@ -1,4 +1,4 @@
-import { breeders, litters, dogs } from './data';
+import { breeders, superuser, litters, dogs } from './data';
 
 const utils = {
   randomFromArray(ar) {
@@ -19,6 +19,10 @@ const utils = {
       updatedAt: expect.anything(),
       deletedAt: expect.notUndefined(),
     };
+  },
+
+  superuser() {
+    return superuser;
   },
 
   randomBreeder(args = { hasDogs: null, hasLitters: null }) {

@@ -55,6 +55,9 @@ const breeder = (sequelize, DataTypes) => {
           return () => this.getDataValue('salt');
         },
       },
+      superuser: {
+        type: DataTypes.BOOLEAN,
+      },
     },
     {
       paranoid: true,
