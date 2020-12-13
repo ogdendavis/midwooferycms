@@ -139,7 +139,9 @@ describe('POST /litters endpoints', () => {
     };
     const res = await request(app).post(`/litters`).send(data);
     expect(res.statusCode).toEqual(201);
-    const pRes = await request(app).get(`/dogs/${data.pups[0]}`);
+    const pRes = await request(app)
+      .get(`/dogs/${data.pups[0]}`)
+      .set('Authorization', `Bearer ${utils.getToken('super')}`);
     expect(pRes.body.litterId).toEqual(res.body.id);
   });
 
@@ -158,7 +160,9 @@ describe('POST /litters endpoints', () => {
       )
     );
     // Confirm that dog's litterId hasn't been changed
-    const pRes = await request(app).get(`/dogs/${data.pups[0]}`);
+    const pRes = await request(app)
+      .get(`/dogs/${data.pups[0]}`)
+      .set('Authorization', `Bearer ${utils.getToken('super')}`);
     expect(pRes.body.litterId).toEqual(testDog.litterId);
   });
 
@@ -269,7 +273,9 @@ describe('POST /litters endpoints', () => {
     expect(res.statusCode).toEqual(201);
     // Removal of litterId tested in DELETE below, so assume it was correctly removed on deletion, and just test that it was put back on restoration
     for (const p of testLitter.pups) {
-      const pRes = await request(app).get(`/dogs/${p}`);
+      const pRes = await request(app)
+        .get(`/dogs/${p}`)
+        .set('Authorization', `Bearer ${utils.getToken('super')}`);
       expect(pRes.statusCode).toEqual(200);
       expect(pRes.body.litterId).toEqual(testLitter.id);
     }
@@ -558,7 +564,9 @@ describe('DELETE /litters endpoint', () => {
     const res = await request(app).delete(`/litters/${testLitter.id}`);
     expect(res.statusCode).toEqual(200);
     for (const pup of testLitter.pups) {
-      const pRes = await request(app).get(`/dogs/${pup}`);
+      const pRes = await request(app)
+        .get(`/dogs/${pup}`)
+        .set('Authorization', `Bearer ${utils.getToken('super')}`);
       expect(pRes.body.litterId).toEqual('');
     }
   });

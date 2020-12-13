@@ -10,7 +10,7 @@ import controllers from '../controllers';
 router.get('/', controllers.get.all);
 
 // Get one dog by id
-router.get('/:dogId', controllers.get.byId);
+router.get('/:dogId', controllers.auth.checkToken, controllers.get.byId);
 
 // Get a dog's breeder
 router.get('/:dogId/breeder', controllers.get.associated);

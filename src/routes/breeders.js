@@ -8,23 +8,19 @@ import controllers from '../controllers';
 router.get('/', controllers.get.all);
 
 // Get one breeder by id
-router.get(
-  '/:breederId',
-  controllers.auth.checkBreederToken,
-  controllers.get.byId
-);
+router.get('/:breederId', controllers.auth.checkToken, controllers.get.byId);
 
 // Get all of a breeder's dogs
 router.get(
   '/:breederId/dogs',
-  controllers.auth.checkBreederToken,
+  controllers.auth.checkToken,
   controllers.get.associated
 );
 
 // Get all of a breeder's litters
 router.get(
   '/:breederId/litters',
-  controllers.auth.checkBreederToken,
+  controllers.auth.checkToken,
   controllers.get.associated
 );
 
@@ -34,21 +30,21 @@ router.post('/', controllers.post.create);
 // Restore a previously deleted breeder
 router.post(
   '/:breederId/restore',
-  controllers.auth.checkBreederToken,
+  controllers.auth.checkToken,
   controllers.post.restore
 );
 
 // Update a breeder by ID
 router.put(
   '/:breederId',
-  controllers.auth.checkBreederToken,
+  controllers.auth.checkToken,
   controllers.put.updateOne
 );
 
 // Delete a breeder by ID
 router.delete(
   '/:breederId',
-  controllers.auth.checkBreederToken,
+  controllers.auth.checkToken,
   controllers.del.deleteOne
 );
 

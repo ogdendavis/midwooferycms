@@ -67,6 +67,9 @@ const utils = {
   allBreeders() {
     return breeders.map((b) => this.dataize(b));
   },
+  getBreeder(id) {
+    return this.dataize(breeders.find((b) => b.id === id));
+  },
   getPassword(breederId) {
     return breeders.find((b) => b.id === breederId).password;
   },

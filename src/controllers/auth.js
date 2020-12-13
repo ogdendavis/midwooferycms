@@ -1,5 +1,7 @@
 import jwt from 'jsonwebtoken';
 
+import utils from './utils';
+
 const auth = {
   login: async (req, res, next) => {
     // Find the breeder, early return if not found
@@ -30,24 +32,56 @@ const auth = {
     }
   },
 
-  checkBreederToken: async (req, res, next) => {
-    const { authorization } = req.headers;
-    const token = authorization && authorization.split(' ')[1];
+  checkToken: async (req, res, next) => {
+    const token = extractToken(req.headers);
     if (!token) {
       return res.status(401).send('Missing token');
     }
-    jwt.verify(token, process.env.JWT_KEY, (err, user) => {
+    jwt.verify(token, process.env.JWT_KEY, async (err, user) => {
       if (err) {
         return res.status(500).send(err);
-      } else if (user.id === req.params.breederId || user.superuser) {
-        // Authorize if user in jwt matches breederId, or is superuser
-        req.user = user;
-        next();
       } else {
-        return res.status(403).send('Token does not match breederId');
+        // Grab info and asset -- we'll need them for verification, and can pass them to next handler to reduce queries
+        const info = utils.getAssetInfo(req);
+        const asset = await info.model.findByPk(info.id, { paranoid: false });
+        if (!asset) {
+          return res
+            .status(404)
+            .send(`(Status code 404) No ${info.noun} with ID ${info.id}`);
+        }
+        req.asset = asset;
+        req.assetInfo = info;
+        // Superusers can do anything they want!
+        // Otherwise, id of breeder in JWT should match breederID of asset
+        if (user.superuser || isBreederAuthorized(user, asset.dataValues)) {
+          req.user = user;
+          next();
+        } else {
+          return res.status(403).send('Token does not match breederId');
+        }
       }
     });
   },
+};
+
+// Accepts headers, returns a token
+const extractToken = (headers) => {
+  const { authorization } = headers;
+  return authorization && authorization.split(' ')[1];
+};
+
+// Accepts user object and req, returns whether or not user is authorized to perform req
+const isBreederAuthorized = (user, asset) => {
+  // Breeder is always allowed to access self
+  if (user.id === asset.id) {
+    return true;
+  }
+  // dogs and litters are accessible to their breeders
+  else if (asset.hasOwnProperty('breederId')) {
+    return user.id === asset.breederId;
+  }
+  // We should only get here when trying to access a breeder record with a token for a different breeder
+  return false;
 };
 
 export default auth;

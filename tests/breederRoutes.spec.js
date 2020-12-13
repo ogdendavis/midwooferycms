@@ -300,9 +300,9 @@ describe('POST /breeders endpoints', () => {
       .set('Authorization', `Bearer ${testToken}`);
     expect(getLitterRes.statusCode).toEqual(200);
     // Make sure dogs and litters are back at their respective endpoints
-    const recheckDogRes = await request(app).get(
-      `/dogs/${utils.randomFromArray(testDogs).id}`
-    );
+    const recheckDogRes = await request(app)
+      .get(`/dogs/${utils.randomFromArray(testDogs).id}`)
+      .set('Authorization', `Bearer ${utils.getToken('super')}`);
     expect(recheckDogRes.statusCode).toEqual(200);
     expect(testDogs).toContainEqual(recheckDogRes.body);
     const recheckLitterRes = await request(app).get(
@@ -539,7 +539,9 @@ describe('DELETE /dogs endpoint', () => {
     expect(resD.body).toEqual({});
     // Try to get each individual dog -- they shouldn't be there!
     for (const td of testDogs) {
-      const res = await request(app).get(`/dogs/${td.id}`);
+      const res = await request(app)
+        .get(`/dogs/${td.id}`)
+        .set('Authorization', `Bearer ${utils.getToken('super')}`);
       expect(res.statusCode).toEqual(404);
       expect(res.body).toEqual({});
     }
