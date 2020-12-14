@@ -305,9 +305,9 @@ describe('POST /breeders endpoints', () => {
       .set('Authorization', `Bearer ${utils.getToken('super')}`);
     expect(recheckDogRes.statusCode).toEqual(200);
     expect(testDogs).toContainEqual(recheckDogRes.body);
-    const recheckLitterRes = await request(app).get(
-      `/litters/${utils.randomFromArray(testLitters).id}`
-    );
+    const recheckLitterRes = await request(app)
+      .get(`/litters/${utils.randomFromArray(testLitters).id}`)
+      .set('Authorization', `Bearer ${utils.getToken(testBreeder.id)}`);
     expect(recheckLitterRes.statusCode).toEqual(200);
     expect(testLitters).toContainEqual(recheckLitterRes.body);
   });
@@ -552,7 +552,7 @@ describe('DELETE /dogs endpoint', () => {
     const testLitters = utils.allLitters({ breederId: testBreeder.id });
     const resB = await request(app)
       .delete(`/breeders/${testBreeder.id}`)
-      .set('Authorization', `Bearer ${utils.getToken(testBreeder.id)}`);
+      .set('Authorization', `Bearer ${utils.getToken('super')}`);
     // Check that deletion return includes litter data
     expect(resB.body.litters).toEqual(testLitters);
     // Try to get all litters from breeder -- since breeder is deleted, should get 404
@@ -563,7 +563,9 @@ describe('DELETE /dogs endpoint', () => {
     expect(resL.body).toEqual({});
     // Check litters endpoints, too
     for (const tl of testLitters) {
-      const res = await request(app).get(`/litters/${tl.id}`);
+      const res = await request(app)
+        .get(`/litters/${tl.id}`)
+        .set('Authorization', `Bearer ${utils.getToken('super')}`);
       expect(res.statusCode).toEqual(404);
       expect(res.body).toEqual({});
     }

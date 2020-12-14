@@ -178,7 +178,9 @@ describe('POST /dogs endpoints', () => {
       .set('Authorization', `Bearer ${utils.getToken(testDog.breederId)}`);
     expect(breederRes.body).toContainEqual(testDog);
     // And in litter's pup list
-    const litterRes = await request(app).get(`/litters/${testDog.litterId}`);
+    const litterRes = await request(app)
+      .get(`/litters/${testDog.litterId}`)
+      .set('Authorization', `Bearer ${utils.getToken(testDog.breederId)}`);
     expect(litterRes.body.pups).toContainEqual(testDog.id);
   });
 
@@ -211,6 +213,14 @@ describe('POST /dogs endpoints', () => {
     const res = await request(app)
       .post(`/dogs/${testDog.id}/restore`)
       .set('Authorization', `Bearer ${utils.getToken(testDog.breederId)}`);
+    if (res.statusCode === 500) {
+      console.log(
+        'Random 500 error! Line 217 of dogRoutes - :dogId/restore ignores active dog'
+      );
+      console.log(testDog);
+      console.log('jwt', utils.getToken(testDog.breederId));
+      console.log(res.body);
+    }
     expect(res.statusCode).toEqual(405);
     expect(res.text).toEqual(
       expect.stringContaining(`Dog with ID ${testDog.id} is already active`)
@@ -243,6 +253,14 @@ describe('PUT /dogs endpoints', () => {
       .put(`/dogs/${testDog.id}`)
       .set('Authorization', `Bearer ${utils.getToken(testDog.breederId)}`)
       .send(dogUpdates);
+    if (res.statusCode === 500) {
+      console.log(
+        'Random 500 error! Line 253 of dogRoutes - dog updates with valid input to PUT'
+      );
+      console.log(testDog, dogUpdates);
+      console.log(res.body);
+      console.log('jwt', utils.getToken(testDog.breederId));
+    }
     expect(res.statusCode).toEqual(200);
     // Correct fields logged as updated
     expect(res.body.updated).toEqual(Object.keys(dogUpdates));
@@ -253,8 +271,12 @@ describe('PUT /dogs endpoints', () => {
   });
 
   test('Adding litterId adds dog to litter pup list', async () => {
-    const testLitter = utils.randomLitter();
-    const testDog = utils.randomDog({ fromLitter: false });
+    // Get a Litter and a dog from the same breeder, but the dog can't be in the litter
+    // Hard code it, for now
+    const testLitter = utils.allLitters({ breederId: 'b1' })[0];
+    const testDog = utils.randomFromArray(
+      utils.allDogs({ breederId: testLitter.breederId })
+    );
     const update = {
       litterId: testLitter.id,
     };

@@ -9,24 +9,44 @@ import controllers from '../controllers';
 router.get('/', controllers.get.all);
 
 // Get one litter by id
-router.get('/:litterId', controllers.get.byId);
+router.get('/:litterId', controllers.auth.checkToken, controllers.get.byId);
 
 // Get the listed puppies of a litter by id
-router.get('/:litterId/pups', controllers.get.associated);
+router.get(
+  '/:litterId/pups',
+  controllers.auth.checkToken,
+  controllers.get.associated
+);
 
 // Get the breeder of a litter by id
-router.get('/:litterId/breeder', controllers.get.associated);
+router.get(
+  '/:litterId/breeder',
+  controllers.auth.checkToken,
+  controllers.get.associated
+);
 
 // Create a new litter
 router.post('/', controllers.post.create);
 
 // Restore a previously deleted litter
-router.post('/:litterId/restore', controllers.post.restore);
+router.post(
+  '/:litterId/restore',
+  controllers.auth.checkToken,
+  controllers.post.restore
+);
 
 // Update a litter by id
-router.put('/:litterId', controllers.put.updateOne);
+router.put(
+  '/:litterId',
+  controllers.auth.checkToken,
+  controllers.put.updateOne
+);
 
 // Delete a litter by ID
-router.delete('/:litterId', controllers.del.deleteOne);
+router.delete(
+  '/:litterId',
+  controllers.auth.checkToken,
+  controllers.del.deleteOne
+);
 
 export default router;
