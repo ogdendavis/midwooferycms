@@ -336,6 +336,42 @@ describe('PUT /dogs endpoints', () => {
     expect(newLitterRes.body.pups).toContainEqual(testDog.id);
   });
 
+  test('Allows superuser to change breederId', async () => {
+    const testDog = utils.randomDog();
+    let testBreeder = utils.randomBreeder();
+    // Make sure we're changing to a new breeder!
+    while (testDog.breederId === testBreeder.id) {
+      testBreeder = utils.randomBreeder();
+    }
+    const res = await request(app)
+      .put(`/dogs/${testDog.id}`)
+      .set('Authorization', `Bearer ${utils.getToken('super')}`)
+      .send({ breederId: testBreeder.id });
+    expect(res.statusCode).toEqual(200);
+    expect(res.body.result.breederId).toEqual(testBreeder.id);
+    const gRes = await request(app)
+      .get(`/dogs/${testDog.id}`)
+      .set('Authorization', `Bearer ${utils.getToken(testBreeder.id)}`);
+    expect(gRes.statusCode).toEqual(200);
+    expect(gRes.body.breederId).toEqual(testBreeder.id);
+  });
+
+  test("Non-superusers can't change breederId", async () => {
+    const testDog = utils.randomDog();
+    let testBreeder = utils.randomBreeder();
+    // Make sure we're changing to a new breeder!
+    while (testDog.breederId === testBreeder.id) {
+      testBreeder = utils.randomBreeder();
+    }
+    // Token is valid for dog, but shouldn't be allowed to change breederId
+    const res = await request(app)
+      .put(`/dogs/${testDog.id}`)
+      .set('Authorization', `Bearer ${utils.getToken(testDog.breederId)}`)
+      .send({ breederId: testBreeder.id });
+    expect(res.statusCode).toEqual(400);
+    expect(res.text).toEqual(expect.stringContaining('breederId'));
+  });
+
   test('Rejects change to dog ID', async () => {
     const testDog = utils.randomDog();
     const badUpdate = {
@@ -381,7 +417,7 @@ describe('PUT /dogs endpoints', () => {
     const testDog = utils.randomDog();
     const res = await request(app)
       .put(`/dogs/${testDog.id}`)
-      .set('Authorization', `Bearer ${utils.getToken(testDog.breederId)}`)
+      .set('Authorization', `Bearer ${utils.getToken('super')}`)
       .send({
         breederId: 'imaginary',
       });

@@ -415,7 +415,38 @@ describe('PUT /litters endpoints', () => {
   });
 
   test('Updates breederId if superuser requests it', async () => {
-    /* TODO */
+    const testLitter = utils.randomLitter();
+    let testBreeder = utils.randomBreeder();
+    while (testLitter.breederId === testBreeder.id) {
+      testBreeder = utils.randomBreeder();
+    }
+    const res = await request(app)
+      .put(`/litters/${testLitter.id}`)
+      .set('Authorization', `Bearer ${utils.getToken('super')}`)
+      .send({ breederId: testBreeder.id });
+    expect(res.statusCode).toEqual(200);
+    expect(res.body.updated).toEqual(['breederId']);
+    const gRes = await request(app)
+      .get(`/breeders/${testBreeder.id}/litters`)
+      .set('Authorization', `Bearer ${utils.getToken(testBreeder.id)}`);
+    expect(gRes.body).toContainEqual({
+      ...testLitter,
+      breederId: testBreeder.id,
+    });
+  });
+
+  test('Rejects update to breederId from non-superuser', async () => {
+    const testLitter = utils.randomLitter();
+    let testBreeder = utils.randomBreeder();
+    while (testLitter.breederId === testBreeder.id) {
+      testBreeder = utils.randomBreeder();
+    }
+    const res = await request(app)
+      .put(`/litters/${testLitter.id}`)
+      .set('Authorization', `Bearer ${utils.getToken(testLitter.breederId)}`)
+      .send({ breederId: testBreeder.id });
+    expect(res.statusCode).toEqual(400);
+    expect(res.text).toEqual(expect.stringContaining('breederId'));
   });
 
   test('Rejects update to non-existent litter', async () => {

@@ -2,6 +2,7 @@ import utils from './utils';
 
 const put = {
   updateOne: async (req, res, next) => {
+    // console.log(req.user);
     const info = utils.getAssetInfo(req);
     const asset = await info.model.findByPk(info.id);
     // Make sure asset exists to be updated
@@ -83,17 +84,28 @@ const put = {
       }
     }
     // If a breederId is provided to update a dog or litter, make sure the new value is good
-    if (
-      req.body.hasOwnProperty('breederId') &&
-      !(await utils
-        .asyncDoesAssetExist(req.body.breederId, req.context.models.Breeder)
-        .catch(next))
-    ) {
-      return res
-        .status(400)
-        .send(
-          `(Status code 400) Can't update breederId: No breeder with ID ${req.body.breederId}`
-        );
+    // Also make sure that it's a superuser -- normal breeders shouldn't be able to reassign dogs/litters
+    if (req.body.hasOwnProperty('breederId')) {
+      if (
+        !req.user.hasOwnProperty('superuser') ||
+        req.user.superuser !== true
+      ) {
+        return res
+          .status(400)
+          .send(
+            `(Status code 400) You don't have permission to change breederId`
+          );
+      } else if (
+        !(await utils
+          .asyncDoesAssetExist(req.body.breederId, req.context.models.Breeder)
+          .catch(next))
+      ) {
+        return res
+          .status(400)
+          .send(
+            `(Status code 400) Can't update breederId: No breeder with ID ${req.body.breederId}`
+          );
+      }
     }
     // If we get here, we can attempt the update -- only failures from here should be data validation from rules defined in database models
     return await info.model
