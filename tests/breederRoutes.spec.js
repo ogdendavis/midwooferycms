@@ -56,7 +56,7 @@ describe('GET /breeders endpoints', () => {
     expect(res.body.message).toEqual('invalid token');
   });
 
-  test('GET /breeders/:breederId rejects a request with a valid token for the wrong breeder', async () => {
+  test('GET /breeders/:breederId rejects a request with a valid but unauthorized token', async () => {
     // Use hasLitters to make sure we have two different breeders
     const testBreeder = utils.randomBreeder({ hasLitters: true });
     const wrongBreeder = utils.randomBreeder({ hasLitters: false });
@@ -103,6 +103,15 @@ describe('GET /breeders endpoints', () => {
     expect(badRes.body.message).toEqual(expect.stringContaining('token'));
   });
 
+  test('GET /breeders/:breederId/dogs fails for valid but unauthorized token', async () => {
+    const testBreeder = utils.randomBreeder();
+    let otherBreeder = utils.randomBreeder({ not: testBreeder.id });
+    const res = await request(app)
+      .get(`/breeders/${testBreeder.id}/dogs`)
+      .set('Authorization', `Bearer ${utils.getToken(otherBreeder.id)}`);
+    expect(res.statusCode).toEqual(403);
+  });
+
   test('GET /breeders/:breederId/litters for breeder with litters', async () => {
     const testBreeder = utils.randomBreeder({ hasLitters: true });
     const testLitters = utils.allLitters({ breederId: testBreeder.id });
@@ -129,6 +138,15 @@ describe('GET /breeders endpoints', () => {
       .set('Authorization', `Bearer nobreeder.has.notoken`);
     expect(res.statusCode).toEqual(500);
     expect(res.body.message).toEqual(expect.stringContaining('token'));
+  });
+
+  test('GET /breeders/:breederId/litters fails for valid but unauthorized token', async () => {
+    const testBreeder = utils.randomBreeder();
+    let otherBreeder = utils.randomBreeder({ not: testBreeder.id });
+    const res = await request(app)
+      .get(`/breeders/${testBreeder.id}/litters`)
+      .set('Authorization', `Bearer ${utils.getToken(otherBreeder.id)}`);
+    expect(res.statusCode).toEqual(403);
   });
 });
 
@@ -349,6 +367,19 @@ describe('POST /breeders endpoints', () => {
       .set('Authorization', `Bearer ${utils.getToken('super')}`);
     expect(res.statusCode).toEqual(404);
   });
+
+  test('POST /breeders/:breederId/restore rejects request with non-superuser token', async () => {
+    const testBreeder = utils.randomBreeder();
+    let otherBreeder = utils.randomBreeder({ not: testBreeder.id });
+    const deleteRes = await request(app)
+      .delete(`/breeders/${testBreeder.id}`)
+      .set('Authorization', `Bearer ${utils.getToken('super')}`);
+    expect(deleteRes.statusCode).toEqual(200);
+    const res = await request(app)
+      .post(`/breeders/${testBreeder.id}/restore`)
+      .set('Authorization', `Bearer ${utils.getToken(otherBreeder.id)}`);
+    expect(res.statusCode).toEqual(403);
+  });
 });
 
 /*
@@ -386,6 +417,17 @@ describe('PUT /breeders endpoints', () => {
     expect(getRes.body).toEqual(res.body.result);
   });
 
+  test('Rejects change with a valid but unauthorized token', async () => {
+    const testBreeder = utils.randomBreeder();
+    let otherBreeder = utils.randomBreeder({ not: testBreeder.id });
+    const res = await request(app)
+      .put(`/breeders/${testBreeder.id}`)
+      .set('Authorization', `Bearer ${utils.getToken(otherBreeder.id)}`)
+      .send({ firstname: 'testy' });
+    expect(res.statusCode).toEqual(403);
+    expect(res.text).toEqual(expect.stringContaining('Token does not match'));
+  });
+
   test('Rejects change to non-unique email', async () => {
     // Get one breeder with litters and one without, so we know we're getting two different breeders to compare
     const breederOne = utils.randomBreeder({ hasLitters: true });
@@ -417,11 +459,6 @@ describe('PUT /breeders endpoints', () => {
     expect(res.statusCode).toEqual(400);
     expect(res.body).toEqual({});
     expect(res.text).toEqual(expect.stringContaining('email'));
-  });
-
-  test('Correctly updates and hashes password', async () => {
-    /* TODO */
-    // Not sure how to test this, or if I even can before setting up Passport.js
   });
 
   test('Rejects invalid password update', async () => {
@@ -496,7 +533,7 @@ describe('PUT /breeders endpoints', () => {
  * DELETE
  */
 
-describe('DELETE /dogs endpoint', () => {
+describe('DELETE /breeders endpoint', () => {
   test('Deletes a breeder', async () => {
     const testBreeder = utils.randomBreeder();
     const res = await request(app)

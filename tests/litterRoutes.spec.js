@@ -32,10 +32,6 @@ describe('GET /litters endpoints', () => {
     expect(res.body).toEqual(testLitter);
   });
 
-  test('GET /litters/:litterId rejects request with unauthorized breeder token', async () => {
-    /* TODO */
-  });
-
   test('GET /litters/:litterId with bad id', async () => {
     const res = await request(app)
       .get('/litters/notavalididatall')
@@ -43,6 +39,15 @@ describe('GET /litters endpoints', () => {
     expect(res.statusCode).toEqual(404);
     expect(res.body).toEqual({});
     expect(res.text).toEqual(expect.stringContaining('No litter with ID'));
+  });
+
+  test('GET /litters/:litterId rejects request with valid but unauthorized token', async () => {
+    const testLitter = utils.randomLitter();
+    const otherBreeder = utils.randomBreeder({ not: testLitter.breederId });
+    const res = await request(app)
+      .get(`/litters/${testLitter.id}`)
+      .set('Authorization', `Bearer ${utils.getToken(otherBreeder.id)}`);
+    expect(res.statusCode).toEqual(403);
   });
 
   test('GET /litters/:litterId/pups for litter with pups', async () => {
@@ -81,7 +86,12 @@ describe('GET /litters endpoints', () => {
   });
 
   test('GET /litters/:litterId/pups rejects request with valid but unauthorized token', async () => {
-    /* TODO */
+    const testLitter = utils.randomLitter();
+    const otherBreeder = utils.randomBreeder({ not: testLitter.breederId });
+    const res = await request(app)
+      .get(`/litters/${testLitter.id}/pups`)
+      .set('Authorization', `Bearer ${utils.getToken(otherBreeder.id)}`);
+    expect(res.statusCode).toEqual(403);
   });
 
   test('GET /litters/:litterId/breeder with valid id', async () => {
@@ -103,6 +113,15 @@ describe('GET /litters endpoints', () => {
     expect(res.statusCode).toEqual(404);
     expect(res.body).toEqual({});
     expect(res.text).toEqual(expect.stringContaining('No litter with ID'));
+  });
+
+  test('GET /litters/:litterId/breeder rejects request with valid but unauthorized token', async () => {
+    const testLitter = utils.randomLitter();
+    const otherBreeder = utils.randomBreeder({ not: testLitter.breederId });
+    const res = await request(app)
+      .get(`/litters/${testLitter.id}/breeder`)
+      .set('Authorization', `Bearer ${utils.getToken(otherBreeder.id)}`);
+    expect(res.statusCode).toEqual(403);
   });
 });
 
@@ -389,6 +408,19 @@ describe('POST /litters endpoints', () => {
     expect(res.statusCode).toEqual(404);
     expect(res.text).toEqual(expect.stringContaining('No litter with ID'));
   });
+
+  test(':litterId/restore endpoint rejects request with valid but unauthorized token', async () => {
+    const testLitter = utils.randomLitter();
+    const otherBreeder = utils.randomBreeder({ not: testLitter.breederId });
+    const delRes = await request(app)
+      .delete(`/litters/${testLitter.id}`)
+      .set('Authorization', `Bearer ${utils.getToken(testLitter.breederId)}`);
+    expect(delRes.statusCode).toEqual(200);
+    const res = await request(app)
+      .post(`/litters/${testLitter.id}/restore`)
+      .set('Authorization', `Bearer ${utils.getToken(otherBreeder.id)}`);
+    expect(res.statusCode).toEqual(403);
+  });
 });
 
 /*
@@ -416,10 +448,7 @@ describe('PUT /litters endpoints', () => {
 
   test('Updates breederId if superuser requests it', async () => {
     const testLitter = utils.randomLitter();
-    let testBreeder = utils.randomBreeder();
-    while (testLitter.breederId === testBreeder.id) {
-      testBreeder = utils.randomBreeder();
-    }
+    let testBreeder = utils.randomBreeder({ not: testLitter.breederId });
     const res = await request(app)
       .put(`/litters/${testLitter.id}`)
       .set('Authorization', `Bearer ${utils.getToken('super')}`)
@@ -437,15 +466,12 @@ describe('PUT /litters endpoints', () => {
 
   test('Rejects update to breederId from non-superuser', async () => {
     const testLitter = utils.randomLitter();
-    let testBreeder = utils.randomBreeder();
-    while (testLitter.breederId === testBreeder.id) {
-      testBreeder = utils.randomBreeder();
-    }
+    let testBreeder = utils.randomBreeder({ not: testLitter.breederId });
     const res = await request(app)
       .put(`/litters/${testLitter.id}`)
       .set('Authorization', `Bearer ${utils.getToken(testLitter.breederId)}`)
       .send({ breederId: testBreeder.id });
-    expect(res.statusCode).toEqual(400);
+    expect(res.statusCode).toEqual(403);
     expect(res.text).toEqual(expect.stringContaining('breederId'));
   });
 
@@ -504,7 +530,13 @@ describe('PUT /litters endpoints', () => {
   });
 
   test('Rejects update to breederId for non-superuser', async () => {
-    /* TODO */
+    const testLitter = utils.randomLitter();
+    const otherBreeder = utils.randomBreeder({ not: testLitter.breederId });
+    const res = await request(app)
+      .put(`/litters/${testLitter.id}`)
+      .set('Authorization', `Bearer ${utils.getToken(testLitter.breederId)}`)
+      .send({ breederId: otherBreeder.id });
+    expect(res.statusCode).toEqual(403);
   });
 
   test('Rejects update with bad count', async () => {
@@ -690,6 +722,16 @@ describe('PUT /litters endpoints', () => {
     expect(getRes.statusCode).toEqual(200);
     expect(getRes.body).toEqual(testLitter);
   });
+
+  test('Rejects update with valid but unauthorized token', async () => {
+    const testLitter = utils.randomLitter();
+    const otherBreeder = utils.randomBreeder({ not: testLitter.breederId });
+    const res = await request(app)
+      .put(`/litters/${testLitter.id}`)
+      .set('Authorization', `Bearer ${utils.getToken(otherBreeder.id)}`)
+      .send({ count: 20 });
+    expect(res.statusCode).toEqual(403);
+  });
 });
 
 /*
@@ -749,5 +791,14 @@ describe('DELETE /litters endpoint', () => {
     // Make sure we still have all litters!
     const allRes = await request(app).get('/litters');
     expect(allRes.body.count).toEqual(utils.allLitters().length);
+  });
+
+  test('Rejects request with valid but unauthorized token', async () => {
+    const testLitter = utils.randomLitter();
+    const otherBreeder = utils.randomBreeder({ not: testLitter.breederId });
+    const res = await request(app)
+      .delete(`/litters/${testLitter.id}`)
+      .set('Authorization', `Bearer ${utils.getToken(otherBreeder.id)}`);
+    expect(res.statusCode).toEqual(403);
   });
 });

@@ -91,9 +91,9 @@ const put = {
         req.user.superuser !== true
       ) {
         return res
-          .status(400)
+          .status(403)
           .send(
-            `(Status code 400) You don't have permission to change breederId`
+            `(Status code 403) You don't have permission to change breederId`
           );
       } else if (
         !(await utils

@@ -46,7 +46,12 @@ describe('GET /dogs endpoints', () => {
   });
 
   test('GET /dogs/:dogId fails for unauthorized (but valid) breeder token', async () => {
-    /* TODO */
+    const testDog = utils.randomDog();
+    let otherBreeder = utils.randomBreeder({ not: testDog.breederId });
+    const res = await request(app)
+      .get(`/dogs/${testDog.id}`)
+      .set('Authorization', `Bearer ${utils.getToken(otherBreeder.id)}`);
+    expect(res.statusCode).toEqual(403);
   });
 
   test('GET /dogs/:dogId/breeder', async () => {
@@ -68,6 +73,15 @@ describe('GET /dogs endpoints', () => {
       .get('/dogs/123456789/breeder')
       .set('Authorization', `Bearer ${utils.getToken('super')}`);
     expect(badBreederRes.statusCode).toEqual(404);
+  });
+
+  test('GET /dogs/:dogId/breeder fails for unauthorized (but valid) breeder token', async () => {
+    const testDog = utils.randomDog();
+    let otherBreeder = utils.randomBreeder({ not: testDog.breederId });
+    const res = await request(app)
+      .get(`/dogs/${testDog.id}/breeder`)
+      .set('Authorization', `Bearer ${utils.getToken(otherBreeder.id)}`);
+    expect(res.statusCode).toEqual(403);
   });
 });
 
@@ -146,6 +160,23 @@ describe('POST /dogs endpoints', () => {
     expect(badRes.text).toEqual(expect.stringContaining(badBID.breederId));
   });
 
+  /* TODO
+   * Implement this test (and logic needed to pass), and equivalent test for
+   * litter creation
+   */
+  // test("Rejects breederId that doesn't match token", async () => {
+  //   const testBreeder = utils.randomBreeder();
+  //   const otherBreeder = utils.randomBreeder({ not: testBreeder.id });
+  //   const res = await request(app)
+  //     .post(`/dogs`)
+  //     .set('Authorization', `Bearer ${utils.getToken(testBreeder.id)}`)
+  //     .send({
+  //       name: 'Arnold',
+  //       breederId: otherBreeder.id,
+  //     });
+  //   expect(res.statusCode).toEqual(403);
+  // });
+
   test('Rejects a request with already-used ID', async () => {
     const testDog = utils.randomDog();
     const testBreeder = utils.randomBreeder();
@@ -202,9 +233,6 @@ describe('POST /dogs endpoints', () => {
     const breederRes = await request(app)
       .get(`/breeders/${testDog.breederId}/dogs`)
       .set('Authorization', `Bearer ${utils.getToken('super')}`);
-    if (breederRes.statusCode > 299) {
-      console.log(breederRes.body);
-    }
     expect(breederRes.body).toContainEqual(testDog);
   });
 
@@ -225,6 +253,19 @@ describe('POST /dogs endpoints', () => {
       .set('Authorization', `Bearer ${utils.getToken('super')}`);
     expect(res.statusCode).toEqual(404);
     expect(res.text).toEqual(expect.stringContaining(`No dog with ID`));
+  });
+
+  test('POST /dogs/:dogId/restore rejects request with valid but unauthorized token', async () => {
+    const testDog = utils.randomDog();
+    const otherBreeder = utils.randomBreeder({ not: testDog.breederId });
+    const deleteRes = await request(app)
+      .delete(`/dogs/${testDog.id}`)
+      .set('Authorization', `Bearer ${utils.getToken(testDog.breederId)}`);
+    expect(deleteRes.statusCode).toEqual(200);
+    const res = await request(app)
+      .post(`/dogs/${testDog.id}/restore`)
+      .set('Authorization', `Bearer ${utils.getToken(otherBreeder.id)}`);
+    expect(res.statusCode).toEqual(403);
   });
 });
 
@@ -322,11 +363,7 @@ describe('PUT /dogs endpoints', () => {
 
   test('Allows superuser to change breederId', async () => {
     const testDog = utils.randomDog();
-    let testBreeder = utils.randomBreeder();
-    // Make sure we're changing to a new breeder!
-    while (testDog.breederId === testBreeder.id) {
-      testBreeder = utils.randomBreeder();
-    }
+    let testBreeder = utils.randomBreeder({ not: testDog.breederId });
     const res = await request(app)
       .put(`/dogs/${testDog.id}`)
       .set('Authorization', `Bearer ${utils.getToken('super')}`)
@@ -342,17 +379,13 @@ describe('PUT /dogs endpoints', () => {
 
   test("Non-superusers can't change breederId", async () => {
     const testDog = utils.randomDog();
-    let testBreeder = utils.randomBreeder();
-    // Make sure we're changing to a new breeder!
-    while (testDog.breederId === testBreeder.id) {
-      testBreeder = utils.randomBreeder();
-    }
+    let testBreeder = utils.randomBreeder({ not: testDog.breederId });
     // Token is valid for dog, but shouldn't be allowed to change breederId
     const res = await request(app)
       .put(`/dogs/${testDog.id}`)
       .set('Authorization', `Bearer ${utils.getToken(testDog.breederId)}`)
       .send({ breederId: testBreeder.id });
-    expect(res.statusCode).toEqual(400);
+    expect(res.statusCode).toEqual(403);
     expect(res.text).toEqual(expect.stringContaining('breederId'));
   });
 
@@ -408,6 +441,16 @@ describe('PUT /dogs endpoints', () => {
     expect(res.statusCode).toEqual(400);
     expect(res.text).toEqual(expect.stringContaining('No breeder with ID'));
   });
+
+  test('Rejects update with valid but unauthorized token', async () => {
+    const testDog = utils.randomDog();
+    const otherBreeder = utils.randomBreeder({ not: testDog.breederId });
+    const res = await request(app)
+      .put(`/dogs/${testDog.id}`)
+      .set('Authorization', `Bearer ${utils.getToken(otherBreeder.id)}`)
+      .send({ weight: 30 });
+    expect(res.statusCode).toEqual(403);
+  });
 });
 
 /*
@@ -427,9 +470,6 @@ describe('DELETE /dogs endpoint', () => {
     const getRes = await request(app)
       .get(`/dogs/${testDog.id}`)
       .set('Authorization', `Bearer ${utils.getToken('super')}`);
-    if (getRes.statusCode === 500) {
-      console.log(getRes.body);
-    }
     expect(getRes.statusCode).toEqual(404);
     expect(getRes.body).toEqual({});
     // Confirm that dog isn't showing in all dogs list, either
@@ -479,5 +519,14 @@ describe('DELETE /dogs endpoint', () => {
       .get(`/dogs`)
       .set('Authorization', `Bearer ${utils.getToken('super')}`);
     expect(getRes.body.count).toEqual(Dogs.length);
+  });
+
+  test('Fails with valid but unauthorized token', async () => {
+    const testDog = utils.randomDog();
+    const otherBreeder = utils.randomBreeder({ not: testDog.breederId });
+    const res = await request(app)
+      .delete(`/dogs/${testDog.id}`)
+      .set('Authorization', `Bearer ${utils.getToken(otherBreeder.id)}`);
+    expect(res.statusCode).toEqual(403);
   });
 });

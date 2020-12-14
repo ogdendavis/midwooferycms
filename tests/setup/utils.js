@@ -26,9 +26,14 @@ const utils = {
     return superuser;
   },
 
-  randomBreeder(args = { hasDogs: null, hasLitters: null }) {
+  randomBreeder(args = { hasDogs: null, hasLitters: null, not: null }) {
     // Start with all breeders -- dataized!
     let pool = this.allBreeders();
+    // Not should be a string with an ID to filter out
+    if (args.hasOwnProperty('not') && args.not !== null) {
+      const targetRemoved = pool.filter((b) => b.id !== args.not);
+      pool = targetRemoved;
+    }
     // Filter pool if hasDogs has been passed
     if (args.hasOwnProperty('hasDogs') && args.hasDogs !== null) {
       const idsWithDogs = [
