@@ -4,6 +4,11 @@ const del = {
   deleteOne: async (req, res, next) => {
     const info = utils.getAssetInfo(req);
 
+    // Only superuser can delete breeders
+    if (info.noun === 'breeder' && req.user.superuser !== true) {
+      return res.status(403).send('Cannot delete breeder');
+    }
+
     const asset = await info.model.findByPk(info.id);
     if (!asset) {
       return res

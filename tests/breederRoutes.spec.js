@@ -280,7 +280,7 @@ describe('POST /breeders endpoints', () => {
     // Delete the breeder and quickly confirm via status codes
     const deleteRes = await request(app)
       .delete(`/breeders/${testBreeder.id}`)
-      .set('Authorization', `Bearer ${testToken}`);
+      .set('Authorization', `Bearer ${utils.getToken('super')}`);
     expect(deleteRes.statusCode).toEqual(200);
     // Now, undelete the breeder!
     const res = await request(app)
@@ -319,7 +319,7 @@ describe('POST /breeders endpoints', () => {
     });
     const deleteRes = await request(app)
       .delete(`/breeders/${testBreeder.id}`)
-      .set('Authorization', `Bearer ${utils.getToken(testBreeder.id)}`);
+      .set('Authorization', `Bearer ${utils.getToken('super')}`);
     expect(deleteRes.statusCode).toEqual(200);
     const res = await request(app)
       .post(`/breeders/${testBreeder.id}/restore`)
@@ -346,9 +346,8 @@ describe('POST /breeders endpoints', () => {
   test('POST /breeders/:breederId/restore rejects bad id', async () => {
     const res = await request(app)
       .post(`/breeders/wakkawakkawakka/restore`)
-      .set('Authorization', 'Bearer token.format.good');
-    expect(res.statusCode).toEqual(500);
-    expect(res.body.message).toEqual(expect.stringContaining(`token`));
+      .set('Authorization', `Bearer ${utils.getToken('super')}`);
+    expect(res.statusCode).toEqual(404);
   });
 });
 
@@ -511,13 +510,21 @@ describe('DELETE /dogs endpoint', () => {
     expect(getAllRes.body.count).toEqual(Breeders.length); // superuser is also here, so no need to subtract 1
   });
 
+  test('Fails if token is not from superuser', async () => {
+    const testBreeder = utils.randomBreeder();
+    const res = await request(app)
+      .delete(`/breeders/${testBreeder.id}`)
+      .set('Authorization', `Bearer ${utils.getToken(testBreeder.id)}`);
+    expect(res.statusCode).toEqual(403);
+    expect(res.text).toEqual(expect.stringContaining('delete breeder'));
+  });
+
   test('Fails with bad ID', async () => {
     const res = await request(app)
       .delete('/breeders/bb8')
-      .set('Authorization', 'Bearer faketoken.with.validformat');
-    // Since there is no breeder with that ID, token is invalid
-    expect(res.statusCode).toEqual(500);
-    expect(res.body.message).toEqual('invalid token');
+      .set('Authorization', `Bearer ${utils.getToken('super')}`);
+    expect(res.statusCode).toEqual(404);
+    expect(res.text).toEqual(expect.stringContaining('No breeder with ID'));
     // GET should show all breeders
     const getRes = await request(app).get('/breeders');
     expect(getRes.body.count).toEqual(Breeders.length + 1); // +1 for superuser
@@ -528,13 +535,13 @@ describe('DELETE /dogs endpoint', () => {
     const testDogs = utils.allDogs({ breederId: testBreeder.id });
     const resB = await request(app)
       .delete(`/breeders/${testBreeder.id}`)
-      .set('Authorization', `Bearer ${utils.getToken(testBreeder.id)}`);
+      .set('Authorization', `Bearer ${utils.getToken('super')}`);
     // Check that breeder deletion returns dog data
     expect(resB.body.dogs).toEqual(testDogs);
     // Try to get all dogs from breeder -- since breeder is gone, should get 404
     const resD = await request(app)
       .get(`/breeders/${testBreeder.id}/dogs`)
-      .set('Authorization', `Bearer ${utils.getToken(testBreeder.id)}`);
+      .set('Authorization', `Bearer ${utils.getToken('super')}`);
     expect(resD.statusCode).toEqual(404);
     expect(resD.body).toEqual({});
     // Try to get each individual dog -- they shouldn't be there!
@@ -558,7 +565,7 @@ describe('DELETE /dogs endpoint', () => {
     // Try to get all litters from breeder -- since breeder is deleted, should get 404
     const resL = await request(app)
       .get(`/breeders/${testBreeder.id}/litters`)
-      .set('Authorization', `Bearer ${utils.getToken(testBreeder.id)}`);
+      .set('Authorization', `Bearer ${utils.getToken('super')}`);
     expect(resL.statusCode).toEqual(404);
     expect(resL.body).toEqual({});
     // Check litters endpoints, too
