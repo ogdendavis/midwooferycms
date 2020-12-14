@@ -7,8 +7,8 @@ import utils from './setup/utils';
 
 // Add authorization tokens to utils
 import createTokens from './setup/tokens';
-beforeAll(async () => {
-  utils.tokens = await createTokens();
+beforeAll(() => {
+  utils.tokens = createTokens();
 });
 
 /*

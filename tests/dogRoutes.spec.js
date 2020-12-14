@@ -7,8 +7,8 @@ import utils from './setup/utils';
 
 // Add authorization tokens to utils
 import createTokens from './setup/tokens';
-beforeAll(async () => {
-  utils.tokens = await createTokens();
+beforeAll(() => {
+  utils.tokens = createTokens();
 });
 
 // Variable for quick access to data from allDogs in utils
@@ -213,14 +213,6 @@ describe('POST /dogs endpoints', () => {
     const res = await request(app)
       .post(`/dogs/${testDog.id}/restore`)
       .set('Authorization', `Bearer ${utils.getToken(testDog.breederId)}`);
-    if (res.statusCode === 500) {
-      console.log(
-        'Random 500 error! Line 217 of dogRoutes - :dogId/restore ignores active dog'
-      );
-      console.log(testDog);
-      console.log('jwt', utils.getToken(testDog.breederId));
-      console.log(res.body);
-    }
     expect(res.statusCode).toEqual(405);
     expect(res.text).toEqual(
       expect.stringContaining(`Dog with ID ${testDog.id} is already active`)
@@ -253,14 +245,6 @@ describe('PUT /dogs endpoints', () => {
       .put(`/dogs/${testDog.id}`)
       .set('Authorization', `Bearer ${utils.getToken(testDog.breederId)}`)
       .send(dogUpdates);
-    if (res.statusCode === 500) {
-      console.log(
-        'Random 500 error! Line 253 of dogRoutes - dog updates with valid input to PUT'
-      );
-      console.log(testDog, dogUpdates);
-      console.log(res.body);
-      console.log('jwt', utils.getToken(testDog.breederId));
-    }
     expect(res.statusCode).toEqual(200);
     // Correct fields logged as updated
     expect(res.body.updated).toEqual(Object.keys(dogUpdates));

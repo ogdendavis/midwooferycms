@@ -1,21 +1,22 @@
-// Import supertest and API app
-import request from 'supertest';
-import app from '../../src/server';
+import jwt from 'jsonwebtoken';
 
 // Need breeder data to get tokens to authenticate requests
 import { breeders, superuser } from './data';
 
-// Get tokens to validate the users!
-const createTokens = async () => {
+const createTokens = () => {
   const tokens = {};
-  await Promise.all(
-    [...breeders, superuser].map(async (b) => {
-      const res = await request(app)
-        .post('/auth/login')
-        .send({ email: b.email, password: b.password });
-      tokens[b.id] = res.text;
-    })
-  );
+  // Extract IDs and use them to build tokens
+  const ids = [superuser.id, ...breeders.map((b) => b.id)];
+  ids.forEach((id) => {
+    const token = jwt.sign(
+      {
+        id,
+        ...(id === 'super' && { superuser: true }),
+      },
+      process.env.JWT_KEY
+    );
+    tokens[id] = token;
+  });
   return tokens;
 };
 

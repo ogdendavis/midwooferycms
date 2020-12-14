@@ -7,8 +7,8 @@ import utils from './setup/utils';
 
 // Add authorization tokens to utils
 import createTokens from './setup/tokens';
-beforeAll(async () => {
-  utils.tokens = await createTokens();
+beforeAll(() => {
+  utils.tokens = createTokens();
 });
 
 // Varaibles for quick access to allBreeders from utils
@@ -502,7 +502,7 @@ describe('DELETE /dogs endpoint', () => {
     const testBreeder = utils.randomBreeder();
     const res = await request(app)
       .delete(`/breeders/${testBreeder.id}`)
-      .set('Authorization', `Bearer ${utils.getToken(testBreeder.id)}`);
+      .set('Authorization', `Bearer ${utils.getToken('super')}`);
     expect(res.statusCode).toEqual(200);
     // Response should show that the correct breeder has been removed
     expect(res.body.breeder).toEqual(testBreeder);

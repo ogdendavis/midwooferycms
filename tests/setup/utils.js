@@ -1,4 +1,5 @@
 import { breeders, superuser, litters, dogs } from './data';
+import createTokens from './tokens';
 
 const utils = {
   randomFromArray(ar) {
@@ -76,9 +77,7 @@ const utils = {
   getToken(breederId) {
     return this.tokens[breederId] ? this.tokens[breederId] : false;
   },
-  tokens: {
-    /* Populated asynchronously when utils are loaded in each test file that needs auth */
-  },
+  tokens: createTokens(),
 
   randomLitter(args = { hasPups: null, pupId: null }) {
     let pool = this.allLitters();
