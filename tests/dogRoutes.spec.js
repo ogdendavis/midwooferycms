@@ -45,9 +45,15 @@ describe('GET /dogs endpoints', () => {
     expect(Dogs).not.toContainEqual(badDogRes.body);
   });
 
+  test('GET /dogs/:dogId fails for unauthorized (but valid) breeder token', async () => {
+    /* TODO */
+  });
+
   test('GET /dogs/:dogId/breeder', async () => {
     const testDog = utils.randomDog();
-    const breederRes = await request(app).get(`/dogs/${testDog.id}/breeder`);
+    const breederRes = await request(app)
+      .get(`/dogs/${testDog.id}/breeder`)
+      .set('Authorization', `Bearer ${utils.getToken('super')}`);
     expect(breederRes.statusCode).toEqual(200);
     // Check that breeder matches known data
     const breeder = breederRes.body;
@@ -58,7 +64,9 @@ describe('GET /dogs endpoints', () => {
     expect(breeder.firstname).toEqual(testBreeder.firstname);
     expect(breeder.lastname).toEqual(testBreeder.lastname);
     // Check bad request
-    const badBreederRes = await request(app).get('/dogs/123456789/breeder');
+    const badBreederRes = await request(app)
+      .get('/dogs/123456789/breeder')
+      .set('Authorization', `Bearer ${utils.getToken('super')}`);
     expect(badBreederRes.statusCode).toEqual(404);
   });
 });
@@ -153,17 +161,21 @@ describe('POST /dogs endpoints', () => {
 
   test('POST /dogs/:dogId/restore restores deleted dog with litter', async () => {
     const testDog = utils.randomDog({ fromLitter: true });
-    const deleteRes = await request(app).delete(`/dogs/${testDog.id}`);
+    const deleteRes = await request(app)
+      .delete(`/dogs/${testDog.id}`)
+      .set('Authorization', `Bearer ${utils.getToken(testDog.breederId)}`);
     expect(deleteRes.statusCode).toEqual(200);
     // Tests to confirm dog removal from litter and breeder lists are in DELETE below, so we'll just assume it worked, here
     // Now ressurect the dog!
-    const res = await request(app).post(`/dogs/${testDog.id}/restore`);
+    const res = await request(app)
+      .post(`/dogs/${testDog.id}/restore`)
+      .set('Authorization', `Bearer ${utils.getToken(testDog.breederId)}`);
     expect(res.statusCode).toEqual(201);
     expect(res.body).toEqual(testDog);
     // Dog should now show up again in breeder's dogs listing
     const breederRes = await request(app)
       .get(`/breeders/${testDog.breederId}/dogs`)
-      .set('Authorization', `Bearer ${utils.getToken('super')}`);
+      .set('Authorization', `Bearer ${utils.getToken(testDog.breederId)}`);
     expect(breederRes.body).toContainEqual(testDog);
     // And in litter's pup list
     const litterRes = await request(app).get(`/litters/${testDog.litterId}`);
@@ -172,10 +184,14 @@ describe('POST /dogs endpoints', () => {
 
   test('POST /dogs/:dogId/restore restores deleted dog without litter', async () => {
     const testDog = utils.randomDog({ fromLitter: false });
-    const deleteRes = await request(app).delete(`/dogs/${testDog.id}`);
+    const deleteRes = await request(app)
+      .delete(`/dogs/${testDog.id}`)
+      .set('Authorization', `Bearer ${utils.getToken(testDog.breederId)}`);
     expect(deleteRes.statusCode).toEqual(200);
     // Now ressurect the dog!
-    const res = await request(app).post(`/dogs/${testDog.id}/restore`);
+    const res = await request(app)
+      .post(`/dogs/${testDog.id}/restore`)
+      .set('Authorization', `Bearer ${utils.getToken(testDog.breederId)}`);
     expect(res.statusCode).toEqual(201);
     expect(res.body).toEqual(testDog);
     // Just to quadruple-check, no litterId has been added somehow
@@ -192,14 +208,19 @@ describe('POST /dogs endpoints', () => {
 
   test('POST /dogs/:dogId/restore ignores active dog', async () => {
     const testDog = utils.randomDog();
-    const res = await request(app).post(`/dogs/${testDog.id}/restore`);
+    const res = await request(app)
+      .post(`/dogs/${testDog.id}/restore`)
+      .set('Authorization', `Bearer ${utils.getToken(testDog.breederId)}`);
     expect(res.statusCode).toEqual(405);
     expect(res.text).toEqual(
       expect.stringContaining(`Dog with ID ${testDog.id} is already active`)
     );
   });
+
   test('POST /dogs/:dogId/restore rejects bad id', async () => {
-    const res = await request(app).post('/dogs/fart/restore');
+    const res = await request(app)
+      .post('/dogs/fart/restore')
+      .set('Authorization', `Bearer ${utils.getToken('super')}`);
     expect(res.statusCode).toEqual(404);
     expect(res.text).toEqual(expect.stringContaining(`No dog with ID`));
   });
@@ -217,9 +238,11 @@ describe('PUT /dogs endpoints', () => {
       weight: 999,
       breed: 'zoomdog',
       color: 'racing stripes',
-      breederId: 'b3',
     };
-    const res = await request(app).put(`/dogs/${testDog.id}`).send(dogUpdates);
+    const res = await request(app)
+      .put(`/dogs/${testDog.id}`)
+      .set('Authorization', `Bearer ${utils.getToken(testDog.breederId)}`)
+      .send(dogUpdates);
     expect(res.statusCode).toEqual(200);
     // Correct fields logged as updated
     expect(res.body.updated).toEqual(Object.keys(dogUpdates));
@@ -236,11 +259,16 @@ describe('PUT /dogs endpoints', () => {
       litterId: testLitter.id,
     };
     // Make and confirm the update
-    const res = await request(app).put(`/dogs/${testDog.id}`).send(update);
+    const res = await request(app)
+      .put(`/dogs/${testDog.id}`)
+      .set('Authorization', `Bearer ${utils.getToken(testDog.breederId)}`)
+      .send(update);
     expect(res.statusCode).toEqual(200);
     expect(res.body.result).toEqual({ ...testDog, ...update });
     // Get and check the litter
-    const lRes = await request(app).get(`/litters/${testLitter.id}`);
+    const lRes = await request(app)
+      .get(`/litters/${testLitter.id}`)
+      .set('Authorization', `Bearer ${utils.getToken(testDog.breederId)}`);
     expect(lRes.body.pups).toContainEqual(testDog.id);
   });
 
@@ -250,10 +278,15 @@ describe('PUT /dogs endpoints', () => {
     const update = {
       litterId: '',
     };
-    const res = await request(app).put(`/dogs/${testDog.id}`).send(update);
+    const res = await request(app)
+      .put(`/dogs/${testDog.id}`)
+      .set('Authorization', `Bearer ${utils.getToken(testDog.breederId)}`)
+      .send(update);
     expect(res.statusCode).toEqual(200);
     expect(res.body.result).toEqual({ ...testDog, ...update });
-    const lRes = await request(app).get(`/litters/${testLitter.id}`);
+    const lRes = await request(app)
+      .get(`/litters/${testLitter.id}`)
+      .set('Authorization', `Bearer ${utils.getToken(testDog.breederId)}`);
     expect(lRes.body.pups).not.toContainEqual(testDog.id);
   });
 
@@ -265,12 +298,19 @@ describe('PUT /dogs endpoints', () => {
     const update = {
       litterId: targetLitter.id,
     };
-    const res = await request(app).put(`/dogs/${testDog.id}`).send(update);
+    const res = await request(app)
+      .put(`/dogs/${testDog.id}`)
+      .set('Authorization', `Bearer ${utils.getToken(testDog.breederId)}`)
+      .send(update);
     expect(res.statusCode).toEqual(200);
     expect(res.body.result).toEqual({ ...testDog, ...update });
-    const oldLitterRes = await request(app).get(`/litters/${testLitter.id}`);
+    const oldLitterRes = await request(app)
+      .get(`/litters/${testLitter.id}`)
+      .set('Authorization', `Bearer ${utils.getToken('super')}`);
     expect(oldLitterRes.body.pups).not.toContainEqual(testDog.id);
-    const newLitterRes = await request(app).get(`/litters/${targetLitter.id}`);
+    const newLitterRes = await request(app)
+      .get(`/litters/${targetLitter.id}`)
+      .set('Authorization', `Bearer ${utils.getToken('super')}`);
     expect(newLitterRes.body.pups).toContainEqual(testDog.id);
   });
 
@@ -279,7 +319,10 @@ describe('PUT /dogs endpoints', () => {
     const badUpdate = {
       id: 'dontchangemebro',
     };
-    const res = await request(app).put(`/dogs/${testDog.id}`).send(badUpdate);
+    const res = await request(app)
+      .put(`/dogs/${testDog.id}`)
+      .set('Authorization', `Bearer ${utils.getToken(testDog.breederId)}`)
+      .send(badUpdate);
     expect(res.statusCode).toEqual(400);
     expect(res.text).toEqual(expect.stringContaining('id'));
   });
@@ -294,25 +337,32 @@ describe('PUT /dogs endpoints', () => {
     // Test 'em all!
     const res1 = await request(app)
       .put(`/dogs/${testDog.id}`)
+      .set('Authorization', `Bearer ${utils.getToken(testDog.breederId)}`)
       .send(mixedUpdate);
     expect(res1.statusCode).toEqual(400);
     expect(res1.text).toEqual(expect.stringContaining('id, fakezorz'));
     // Now without ID
     const res2 = await request(app)
       .put(`/dogs/${testDog.id}`)
+      .set('Authorization', `Bearer ${utils.getToken(testDog.breederId)}`)
       .send({ name: mixedUpdate.name, fakies: mixedUpdate.fakezorz });
     expect(res2.statusCode).toEqual(400);
     expect(res2.text).toEqual(expect.stringContaining('fakies'));
     // Confirm that name wasn't changed
-    const getRes = await request(app).get(`/dogs/${testDog.id}`);
+    const getRes = await request(app)
+      .get(`/dogs/${testDog.id}`)
+      .set('Authorization', `Bearer ${utils.getToken(testDog.breederId)}`);
     expect(getRes.body.name).not.toEqual(mixedUpdate.name);
   });
 
   test('Rejects update with invalid breederId', async () => {
     const testDog = utils.randomDog();
-    const res = await request(app).put(`/dogs/${testDog.id}`).send({
-      breederId: 'imaginary',
-    });
+    const res = await request(app)
+      .put(`/dogs/${testDog.id}`)
+      .set('Authorization', `Bearer ${utils.getToken(testDog.breederId)}`)
+      .send({
+        breederId: 'imaginary',
+      });
     expect(res.statusCode).toEqual(400);
     expect(res.text).toEqual(expect.stringContaining('No breeder with ID'));
   });
@@ -325,7 +375,9 @@ describe('PUT /dogs endpoints', () => {
 describe('DELETE /dogs endpoint', () => {
   test('Deletes a dog', async () => {
     const testDog = utils.randomDog();
-    const res = await request(app).delete(`/dogs/${testDog.id}`);
+    const res = await request(app)
+      .delete(`/dogs/${testDog.id}`)
+      .set('Authorization', `Bearer ${utils.getToken(testDog.breederId)}`);
     expect(res.statusCode).toEqual(200);
     // Should get back a response with the deleted dog info
     expect(res.body).toEqual(testDog);
@@ -348,10 +400,14 @@ describe('DELETE /dogs endpoint', () => {
     const testDog = utils.randomDog({ fromLitter: true });
     const testLitter = utils.randomLitter({ pupId: testDog.id });
     // Delete the dog
-    const res = await request(app).delete(`/dogs/${testDog.id}`);
+    const res = await request(app)
+      .delete(`/dogs/${testDog.id}`)
+      .set('Authorization', `Bearer ${utils.getToken(testDog.breederId)}`);
     expect(res.statusCode).toEqual(200);
     // Get the litter
-    const lRes = await request(app).get(`/litters/${testLitter.id}`);
+    const lRes = await request(app)
+      .get(`/litters/${testLitter.id}`)
+      .set('Authorization', `Bearer ${utils.getToken(testDog.breederId)}`);
     expect(lRes.body.pups).not.toContainEqual(testDog.id);
   });
 
@@ -359,19 +415,27 @@ describe('DELETE /dogs endpoint', () => {
     // All dogs have breeder
     const testDog = utils.randomDog();
     // Delete the dog
-    const res = await request(app).delete(`/dogs/${testDog.id}`);
+    const res = await request(app)
+      .delete(`/dogs/${testDog.id}`)
+      .set('Authorization', `Bearer ${utils.getToken(testDog.breederId)}`);
     expect(res.statusCode).toEqual(200);
     // Get the list of all the breeder's dogs
-    const bRes = await request(app).get(`/breeders/${testDog.breederId}/dogs`);
+    const bRes = await request(app)
+      .get(`/breeders/${testDog.breederId}/dogs`)
+      .set('Authorization', `Bearer ${utils.getToken(testDog.breederId)}`);
     expect(bRes.body).not.toContainEqual(testDog.id);
   });
 
   test('Fails with bad ID', async () => {
-    const res = await request(app).delete(`/dogs/iamnotavalidid`);
+    const res = await request(app)
+      .delete(`/dogs/iamnotavalidid`)
+      .set('Authorization', `Bearer ${utils.getToken('super')}`);
     // Expect a 404 response
     expect(res.statusCode).toEqual(404);
     // Database should still have all dogs
-    const getRes = await request(app).get(`/dogs`);
+    const getRes = await request(app)
+      .get(`/dogs`)
+      .set('Authorization', `Bearer ${utils.getToken('super')}`);
     expect(getRes.body.count).toEqual(Dogs.length);
   });
 });
