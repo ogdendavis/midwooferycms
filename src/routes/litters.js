@@ -26,7 +26,7 @@ router.get(
 );
 
 // Create a new litter
-router.post('/', controllers.post.create);
+router.post('/', controllers.auth.checkCreationToken, controllers.post.create);
 
 // Restore a previously deleted litter
 router.post(

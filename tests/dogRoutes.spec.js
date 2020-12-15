@@ -101,7 +101,10 @@ describe('POST /dogs endpoints', () => {
       litterId: 'l1',
       sex: 'm',
     };
-    const res = await request(app).post('/dogs').send(dogData);
+    const res = await request(app)
+      .post('/dogs')
+      .set('Authorization', `Bearer ${utils.getToken(dogData.breederId)}`)
+      .send(dogData);
     expect(res.statusCode).toEqual(201);
     expect(res.body).toEqual(utils.dataize(dogData));
   });
@@ -111,7 +114,10 @@ describe('POST /dogs endpoints', () => {
       name: 'Audi',
       breederId: 'b3',
     };
-    const res = await request(app).post('/dogs').send(partyDog);
+    const res = await request(app)
+      .post('/dogs')
+      .set('Authorization', `Bearer ${utils.getToken(partyDog.breederId)}`)
+      .send(partyDog);
     expect(res.statusCode).toEqual(201);
     expect(res.body).toEqual(
       expect.objectContaining({
@@ -133,7 +139,10 @@ describe('POST /dogs endpoints', () => {
       id: 'launcelot',
       quest: 'to seek the holy grail',
     };
-    const res = await request(app).post('/dogs').send(badDog);
+    const res = await request(app)
+      .post('/dogs')
+      .set('Authorization', `Bearer ${utils.getToken('super')}`)
+      .send(badDog);
     expect(res.statusCode).toEqual(400);
   });
 
@@ -144,7 +153,10 @@ describe('POST /dogs endpoints', () => {
       color: 'blue',
       weight: 300,
     };
-    const noRes = await request(app).post('/dogs').send(noBID);
+    const noRes = await request(app)
+      .post('/dogs')
+      .set('Authorization', `Bearer ${utils.getToken('super')}`)
+      .send(noBID);
     expect(noRes.statusCode).toEqual(400);
     expect(noRes.text).toEqual(expect.stringContaining('breederId'));
 
@@ -154,28 +166,27 @@ describe('POST /dogs endpoints', () => {
       breederId:
         'thisisanonsensestringthatshouldneverendupasabreederidandifitdoesitwillbreakthistest',
     };
-    const badRes = await request(app).post('/dogs').send(badBID);
+    const badRes = await request(app)
+      .post('/dogs')
+      .set('Authorization', `Bearer ${utils.getToken('super')}`)
+      .send(badBID);
     expect(badRes.statusCode).toEqual(400);
     expect(badRes.text).toEqual(expect.stringContaining('breederId'));
     expect(badRes.text).toEqual(expect.stringContaining(badBID.breederId));
   });
 
-  /* TODO
-   * Implement this test (and logic needed to pass), and equivalent test for
-   * litter creation
-   */
-  // test("Rejects breederId that doesn't match token", async () => {
-  //   const testBreeder = utils.randomBreeder();
-  //   const otherBreeder = utils.randomBreeder({ not: testBreeder.id });
-  //   const res = await request(app)
-  //     .post(`/dogs`)
-  //     .set('Authorization', `Bearer ${utils.getToken(testBreeder.id)}`)
-  //     .send({
-  //       name: 'Arnold',
-  //       breederId: otherBreeder.id,
-  //     });
-  //   expect(res.statusCode).toEqual(403);
-  // });
+  test("Rejects breederId that doesn't match token", async () => {
+    const testBreeder = utils.randomBreeder();
+    const otherBreeder = utils.randomBreeder({ not: testBreeder.id });
+    const res = await request(app)
+      .post(`/dogs`)
+      .set('Authorization', `Bearer ${utils.getToken(testBreeder.id)}`)
+      .send({
+        name: 'Arnold',
+        breederId: otherBreeder.id,
+      });
+    expect(res.statusCode).toEqual(403);
+  });
 
   test('Rejects a request with already-used ID', async () => {
     const testDog = utils.randomDog();
@@ -185,7 +196,10 @@ describe('POST /dogs endpoints', () => {
       name: 'Nopey',
       breederId: testBreeder.id,
     };
-    const res = await request(app).post('/dogs').send(dupeDog);
+    const res = await request(app)
+      .post('/dogs')
+      .set('Authorization', `Bearer ${utils.getToken('super')}`)
+      .send(dupeDog);
     expect(res.statusCode).toEqual(400);
     expect(res.text).toEqual(expect.stringContaining(`id ${dupeDog.id}`));
   });

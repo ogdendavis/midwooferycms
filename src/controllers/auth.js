@@ -33,14 +33,17 @@ const auth = {
   },
 
   checkToken: async (req, res, next) => {
+    // Validates and authorizes requests to act on existing assets
     const token = extractToken(req.headers);
     if (!token) {
       return res.status(401).send('Missing token');
     }
     jwt.verify(token, process.env.JWT_KEY, async (err, user) => {
       if (err) {
+        // console.error(err);
         return res.status(500).send(err);
       } else {
+        // Workflow for modifying existing assets
         // Grab info and asset -- we'll need them for verification, and can pass them to next handler to reduce queries
         const info = utils.getAssetInfo(req);
         const asset = await info.model.findByPk(info.id, { paranoid: false });
@@ -53,13 +56,30 @@ const auth = {
         req.assetInfo = info;
         // Superusers can do anything they want!
         // Otherwise, id of breeder in JWT should match breederID of asset
-        if (user.superuser || isBreederAuthorized(user, asset.dataValues)) {
-          req.user = user;
-          next();
-        } else {
+        if (!user.superuser && !isBreederAuthorized(user, asset.dataValues)) {
           return res.status(403).send('Token does not match breederId');
         }
+        req.user = user;
+        next();
       }
+    });
+  },
+
+  checkCreationToken: async (req, res, next) => {
+    // Workflow for asset creation
+    const token = extractToken(req.headers);
+    if (!token) {
+      return res.status(401).send('Missing token');
+    }
+    jwt.verify(token, process.env.JWT_KEY, async (err, user) => {
+      if (err) {
+        // console.error(err);
+        return res.status(500).send(err);
+      } else if (req.body.breederId !== user.id && !user.superuser) {
+        return res.status(403).send('Token does not match breederId');
+      }
+      // If we get here, the breederId in the request matches the user token (or user is superuser), so we can pass the request along to the creation handler
+      next();
     });
   },
 };

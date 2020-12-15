@@ -20,7 +20,7 @@ router.get(
 );
 
 // Create a dog
-router.post('/', controllers.post.create);
+router.post('/', controllers.auth.checkCreationToken, controllers.post.create);
 
 // Restore a deleted dog
 router.post(

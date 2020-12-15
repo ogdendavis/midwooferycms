@@ -247,7 +247,7 @@ describe('POST /litters endpoints', () => {
     };
     const res = await request(app)
       .post('/litters')
-      .set('Authorization', `Bearer ${utils.getToken(data.breederId)}`)
+      .set('Authorization', `Bearer ${utils.getToken('super')}`)
       .send(data);
     expect(res.statusCode).toEqual(400);
     expect(res.body).toEqual({});
@@ -270,6 +270,19 @@ describe('POST /litters endpoints', () => {
     expect(res.text).toEqual(
       expect.stringContaining(`Invalid breederId: ${data.breederId}`)
     );
+  });
+
+  test("Rejects breederId that doesn't match token", async () => {
+    const testBreeder = utils.randomBreeder();
+    const otherBreeder = utils.randomBreeder({ not: testBreeder.id });
+    const res = await request(app)
+      .post(`/litters`)
+      .set('Authorization', `Bearer ${utils.getToken(testBreeder.id)}`)
+      .send({
+        dam: { name: 'Annie' },
+        breederId: otherBreeder.id,
+      });
+    expect(res.statusCode).toEqual(403);
   });
 
   test('Rejects a litter with invalid dam information', async () => {
