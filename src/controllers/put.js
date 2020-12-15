@@ -2,17 +2,9 @@ import utils from './utils';
 
 const put = {
   updateOne: async (req, res, next) => {
-    // console.log(req.user);
-    const info = utils.getAssetInfo(req);
-    const asset = await info.model.findByPk(info.id);
-    // Make sure asset exists to be updated
-    if (!asset) {
-      return res
-        .status(404)
-        .send(`(Status code 404) No ${info.noun} with ID ${info.id}`);
-    }
+    const info = req.assetInfo;
     // Surface asset.dataVales for easy use
-    const assetValues = asset.dataValues;
+    const assetValues = req.asset.dataValues;
     // Sort updates sent into valid and invalid
     const [badKeys, goodKeys] = [[], []];
     for (const key in req.body) {

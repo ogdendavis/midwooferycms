@@ -79,19 +79,9 @@ const post = {
   },
 
   restore: async (req, res, next) => {
-    const info = utils.getAssetInfo(req);
-    // Get the thing from the database
-    const assetInDB = await info.model
-      .findByPk(info.id, { paranoid: false })
-      .catch(next);
-    // Check if the ID isn't associated with any deleted or active dog
-    if (!assetInDB) {
-      return res
-        .status(404)
-        .send(
-          `(Status code 404) No ${info.noun} with ID ${info.id} found in deleted ${info.noun}s`
-        );
-    }
+    const info = req.assetInfo;
+    const assetInDB = req.asset;
+
     // Check if the thing has been deleted!
     if (assetInDB.deletedAt === null) {
       return res

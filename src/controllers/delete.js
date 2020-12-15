@@ -2,18 +2,12 @@ import utils from './utils';
 
 const del = {
   deleteOne: async (req, res, next) => {
-    const info = utils.getAssetInfo(req);
+    const info = req.assetInfo;
+    const asset = req.asset;
 
     // Only superuser can delete breeders
     if (info.noun === 'breeder' && req.user.superuser !== true) {
       return res.status(403).send('Cannot delete breeder');
-    }
-
-    const asset = await info.model.findByPk(info.id);
-    if (!asset) {
-      return res
-        .status(404)
-        .send(`(Status code 404) No ${info.noun} with ID ${info.id}`);
     }
 
     // Hold info of other items that were deleted

@@ -11,42 +11,25 @@ const get = {
     });
   },
 
-  byId: async (req, res, next) => {
-    // Get asset noun, id, and associated model
-    const info = utils.getAssetInfo(req);
-    // Grab and return the asset
-    const asset = await info.model.findByPk(info.id).catch(next);
-    // Send error if asset not found
-    if (!asset) {
-      return res
-        .status(404)
-        .send(`(Status code 404) No ${info.noun} with ID ${info.id}`);
-    }
+  byId: (req, res, next) => {
     // For breeders, strip out some data related to user auth before returning
     const retObj =
-      info.noun === 'breeder'
-        ? utils.sanitizeBreederObj(asset.dataValues)
-        : { ...asset.dataValues };
+      req.assetInfo.noun === 'breeder'
+        ? utils.sanitizeBreederObj(req.asset.dataValues)
+        : { ...req.asset.dataValues };
     return res.send(retObj);
   },
 
   associated: async (req, res, next) => {
-    const info = utils.getAssetInfo(req);
-    const asset = await info.model.findByPk(info.id).catch(next);
-    if (!asset) {
-      return res
-        .status(404)
-        .send(`(Status code 404) No ${info.noun} with ID ${info.id}`);
-    }
     // targetNoun will be either breeder, litters, dogs, or pups
     const targetNoun = req.url.split('/').pop();
     const targetAsset =
       targetNoun === 'breeder'
-        ? await asset.getBreeder().catch(next)
+        ? await req.asset.getBreeder().catch(next)
         : targetNoun === 'dogs'
-        ? await asset.getDogs().catch(next)
+        ? await req.asset.getDogs().catch(next)
         : targetNoun === 'litters'
-        ? await asset.getLitters().catch(next)
+        ? await req.asset.getLitters().catch(next)
         : targetNoun === 'pups'
         ? await req.context.models.Dog.findAll({
             where: { litterId: req.params.litterId },
@@ -57,7 +40,7 @@ const get = {
       return res
         .status(204)
         .send(
-          `(Status code ${res.statusCode}) No ${targetNoun} listed for ${info.noun} ${asset.id}`
+          `(Status code ${res.statusCode}) No ${targetNoun} listed for ${req.assetInfo.noun} ${req.asset.id}`
         );
     }
     // If we get here, make sure the asset is truthy, and return it!
@@ -70,7 +53,7 @@ const get = {
       : res
           .status(404)
           .send(
-            `(Status code ${res.statusCode}) No ${targetNoun} listed for this ${asset.noun}`
+            `(Status code ${res.statusCode}) No ${targetNoun} listed for this ${req.asset.noun}`
           );
   },
 };

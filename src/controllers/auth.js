@@ -47,7 +47,8 @@ const auth = {
         // Grab info and asset -- we'll need them for verification, and can pass them to next handler to reduce queries
         const info = utils.getAssetInfo(req);
         const asset = await info.model.findByPk(info.id, { paranoid: false });
-        if (!asset) {
+        // If asset doesn't exist, or if you're trying to do anything other than restore with a deleted asset, return a 404
+        if (!asset || isFetchingDeletedAsset(req, asset)) {
           return res
             .status(404)
             .send(`(Status code 404) No ${info.noun} with ID ${info.id}`);
@@ -121,6 +122,13 @@ const isBreederAuthorized = (user, asset) => {
   }
   // We should only get here when trying to access a breeder record with a token for a different breeder
   return false;
+};
+
+// Accepts req and asset, returns true if asset is deleted and you're trying to do anything other than restore it
+const isFetchingDeletedAsset = (req, asset) => {
+  const isRestoring =
+    req.method === 'POST' && req.route.path.split('/').pop() === 'restore';
+  return asset.dataValues.deletedAt && !isRestoring;
 };
 
 export default auth;
