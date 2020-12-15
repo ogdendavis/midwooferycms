@@ -66,7 +66,7 @@ const auth = {
   },
 
   checkCreationToken: async (req, res, next) => {
-    // Workflow for asset creation
+    // Validates and authorizes requests to create assets
     const token = extractToken(req.headers);
     if (!token) {
       return res.status(401).send('Missing token');
@@ -79,6 +79,25 @@ const auth = {
         return res.status(403).send('Token does not match breederId');
       }
       // If we get here, the breederId in the request matches the user token (or user is superuser), so we can pass the request along to the creation handler
+      next();
+    });
+  },
+
+  tokenExists: async (req, res, next) => {
+    // Basic check for any valid token associated with any breeder
+    const token = extractToken(req.headers);
+    if (!token) {
+      return res.status(401).send('Missing token');
+    }
+    jwt.verify(token, process.env.JWT_KEY, async (err, user) => {
+      if (err) {
+        return res.status(500).send(err);
+      } else {
+        const breeder = await req.context.models.Breeder.findByPk(user.id);
+        if (!breeder) {
+          return res.status(403).send('invalid token');
+        }
+      }
       next();
     });
   },

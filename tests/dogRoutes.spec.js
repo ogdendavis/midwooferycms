@@ -21,7 +21,9 @@ const Dogs = utils.allDogs();
 
 describe('GET /dogs endpoints', () => {
   test('GET /dogs', async () => {
-    const res = await request(app).get('/dogs');
+    const res = await request(app)
+      .get('/dogs')
+      .set('Authorization', `Bearer ${utils.getToken('super')}`);
     expect(res.statusCode).toEqual(200);
     expect(res.body.noun).toEqual('dog');
     expect(res.body.count).toEqual(Dogs.length);
@@ -487,7 +489,9 @@ describe('DELETE /dogs endpoint', () => {
     expect(getRes.statusCode).toEqual(404);
     expect(getRes.body).toEqual({});
     // Confirm that dog isn't showing in all dogs list, either
-    const getAllRes = await request(app).get('/dogs');
+    const getAllRes = await request(app)
+      .get('/dogs')
+      .set('Authorization', `Bearer ${utils.getToken('super')}`);
     expect(getAllRes.body.count).toEqual(Dogs.length - 1);
   });
 

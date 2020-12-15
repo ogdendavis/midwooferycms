@@ -17,7 +17,9 @@ beforeAll(() => {
 
 describe('GET /litters endpoints', () => {
   test('GET /litters', async () => {
-    const res = await request(app).get('/litters');
+    const res = await request(app)
+      .get('/litters')
+      .set('Authorization', `Bearer ${utils.getToken('super')}`);
     expect(res.statusCode).toEqual(200);
     expect(res.body.noun).toEqual('litter');
     expect(res.body.count).toEqual(utils.allLitters().length);
@@ -802,7 +804,9 @@ describe('DELETE /litters endpoint', () => {
     expect(res.body).toEqual({});
     expect(res.text).toEqual(expect.stringContaining('No litter with ID'));
     // Make sure we still have all litters!
-    const allRes = await request(app).get('/litters');
+    const allRes = await request(app)
+      .get('/litters')
+      .set('Authorization', `Bearer ${utils.getToken('super')}`);
     expect(allRes.body.count).toEqual(utils.allLitters().length);
   });
 

@@ -7,7 +7,7 @@ const router = Router();
 import controllers from '../controllers';
 
 // Get all dogs
-router.get('/', controllers.get.all);
+router.get('/', controllers.auth.tokenExists, controllers.get.all);
 
 // Get one dog by id
 router.get('/:dogId', controllers.auth.checkToken, controllers.get.byId);

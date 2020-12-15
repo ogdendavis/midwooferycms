@@ -6,7 +6,7 @@ import controllers from '../controllers';
 
 // Get basic info on all litters
 // As model grows, needs to be refined down to basic stats. Should probably eventually be eliminated altogether
-router.get('/', controllers.get.all);
+router.get('/', controllers.auth.tokenExists, controllers.get.all);
 
 // Get one litter by id
 router.get('/:litterId', controllers.auth.checkToken, controllers.get.byId);
