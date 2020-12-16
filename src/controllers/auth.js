@@ -24,7 +24,15 @@ const auth = {
         if (err) {
           return res.status(500).send(err);
         } else {
-          return res.send(token);
+          const userObj = utils.sanitizeBreederObj(breeder.dataValues);
+          // Strip out update info
+          delete userObj.createdAt;
+          delete userObj.updatedAt;
+          delete userObj.deletedAt;
+          return res.send({
+            user: userObj,
+            token,
+          });
         }
       });
     } else {

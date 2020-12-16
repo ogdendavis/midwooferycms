@@ -13,8 +13,19 @@ describe('Login functionality', () => {
       .post('/auth/login')
       .send({ email: testBreeder.email, password });
     expect(res.statusCode).toEqual(200);
+    // User object should match breeder info in database, with some properties stripped out
+    expect(res.body.user).toEqual(
+      expect.objectContaining({
+        id: testBreeder.id,
+        firstname: testBreeder.firstname,
+        lastname: testBreeder.lastname,
+        email: testBreeder.email,
+      })
+    );
     // Token response will be 3 encoded strings, joined by .
-    expect(res.text).toEqual(expect.stringMatching(/[\w-]*\.[\w-]*.[\w-]*/));
+    expect(res.body.token).toEqual(
+      expect.stringMatching(/^[\w-]*\.[\w-]*.[\w-]*$/)
+    );
   });
 
   test('Returns valid response for bad password', async () => {
