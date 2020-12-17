@@ -34,14 +34,14 @@ describe('Login functionality', () => {
       .post('/auth/login')
       .send({ email: testBreeder.email, password: '' });
     expect(res.statusCode).toEqual(401);
-    expect(res.text).toEqual('Failed Login');
+    expect(res.body.invalid).toEqual('password');
   });
 
-  test('Returns 404 for invalid user', async () => {
+  test('Returns 401 for invalid user email', async () => {
     const res = await request(app)
       .post('/auth/login')
       .send({ email: 'bademail', password: '' });
-    expect(res.statusCode).toEqual(404);
-    expect(res.text).toEqual(expect.stringContaining('credentials'));
+    expect(res.statusCode).toEqual(401);
+    expect(res.body.invalid).toEqual('email');
   });
 });

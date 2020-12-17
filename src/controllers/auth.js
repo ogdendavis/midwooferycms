@@ -4,12 +4,16 @@ import utils from './utils';
 
 const auth = {
   login: async (req, res, next) => {
+    console.log(req.body);
     // Find the breeder, early return if not found
     const breeder = await req.context.models.Breeder.findOne({
       where: { email: req.body.email },
     }).catch(next);
     if (!breeder) {
-      return res.status(404).send('No user found with those credentials');
+      return res.status(401).send({
+        invalid: 'email',
+        message: 'No user found with those credentials',
+      });
     }
     // Check the password
     const correctPassword = breeder.passwordCheck(req.body.password);
@@ -36,7 +40,10 @@ const auth = {
         }
       });
     } else {
-      return res.status(401).send('Failed Login');
+      return res.status(401).send({
+        invalid: 'password',
+        message: 'No user found with those credentials',
+      });
     }
   },
 
