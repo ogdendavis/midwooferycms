@@ -15,7 +15,8 @@
     "test": "jest --runInBand",
     "pretest:watch": "pg_ctl -D /usr/local/var/postgres restart -w",
     "test:watch": "npm run test -- --watch",
-    "posttest:watch": "pg_ctl -D /usr/local/var/postgres stop -m smart"
+    "posttest:watch": "pg_ctl -D /usr/local/var/postgres stop -m smart",
+    "initializeDatabase": "babel-node -r dotenv/config src/database/setup/run.js"
   },
   "author": "Lucas Ogden-Davis",
   "license": "ISC",
@@ -27,6 +28,7 @@
     "jsonwebtoken": "^8.5.1",
     "pg": "^8.4.2",
     "pg-hstore": "^2.3.3",
+    "prompt-sync": "^4.2.0",
     "sequelize": "^6.3.5",
     "uuid": "^8.3.1"
   },

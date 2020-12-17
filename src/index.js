@@ -9,7 +9,7 @@ const PORT =
     ? process.env.DEV_PORT
     : process.env.NODE_ENV === 'test'
     ? process.env.TEST_PORT
-    : process.env.NODE_ENV === 'prod'
+    : process.env.NODE_ENV === 'production'
     ? process.env.PROD_PORT
     : 3300;
 
