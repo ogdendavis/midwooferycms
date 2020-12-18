@@ -4,7 +4,6 @@ import utils from './utils';
 
 const auth = {
   login: async (req, res, next) => {
-    console.log(req.body);
     // Find the breeder, early return if not found
     const breeder = await req.context.models.Breeder.findOne({
       where: { email: req.body.email },
