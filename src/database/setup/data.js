@@ -56,6 +56,7 @@ const litter = {
   dam: { id: damId },
   sire: { id: sireId },
   pups: [pupId],
+  breederId,
 };
 
 export { superuser, breeder, dogs, litter };

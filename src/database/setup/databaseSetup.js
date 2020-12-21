@@ -15,7 +15,7 @@ const databaseSetup = async () => {
     await populateModel('Litter', litter);
     return { superuser, breeder };
   } catch (er) {
-    console.error('Test database setup error: ', er);
+    console.error('Database setup error: ', er);
     return;
   }
 };

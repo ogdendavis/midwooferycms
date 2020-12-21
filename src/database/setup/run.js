@@ -12,7 +12,7 @@ console.log(
 let confirm = prompt('Are you sure you want to continue? (y/n) ').toLowerCase();
 
 while (!['y', 'yes', 'n', 'no'].includes(confirm)) {
-  console.log('Please answer yes or no.');
+  console.error('Please answer yes or no.');
   confirm = prompt('Are you sure you want to continue? (y/n) ').toLowerCase();
 }
 
