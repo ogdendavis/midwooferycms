@@ -52,7 +52,7 @@ app.use((err, req, res, next) => {
   }
   // Console log unhandled errors;
   if (message === '') {
-    console.error('Unhandled database error', error);
+    console.error('Unhandled database error', err);
   }
   return res.status(status).send(message);
 });
