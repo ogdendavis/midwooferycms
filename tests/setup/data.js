@@ -147,6 +147,36 @@ const dogs = [
     litterId: '',
     sex: 'm',
   },
+  {
+    id: 'd7',
+    name: 'Andrew',
+    breed: 'labrador retriever',
+    color: 'black',
+    weight: 40,
+    breederId: 'b4',
+    litterId: '',
+    sex: 'm',
+  },
+  {
+    id: 'd8',
+    name: 'Zorro',
+    breed: 'golden retriever',
+    color: 'apricot',
+    weight: 40,
+    breederId: 'b4',
+    litterId: '',
+    sex: 'f',
+  },
+  {
+    id: 'd9',
+    name: 'Harriet',
+    breed: 'corgi',
+    color: 'black',
+    weight: 15,
+    breederId: 'b1',
+    litterId: '',
+    sex: 'f',
+  },
 ];
 
 export { breeders, superuser, litters, dogs };

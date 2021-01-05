@@ -43,11 +43,18 @@ const get = {
           `(Status code ${res.statusCode}) No ${targetNoun} listed for ${req.assetInfo.noun} ${req.asset.id}`
         );
     }
-    // If we get here, make sure the asset is truthy, and return it!
+    // If we get here, make sure the asset is good, and sanitize if breeder
     const retObj =
       targetNoun === 'breeder'
         ? utils.sanitizeBreederObj(targetAsset)
         : targetAsset;
+
+    // Order return objects: dogs by name, litters by ???
+    if (targetNoun === 'dogs') {
+      retObj.sort((a, b) => (a.name < b.name ? -1 : 1));
+    }
+    // TODO order litters
+
     return targetAsset
       ? res.send(retObj)
       : res

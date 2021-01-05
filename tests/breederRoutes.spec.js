@@ -78,7 +78,10 @@ describe('GET /breeders endpoints', () => {
     const res = await request(app)
       .get(`/breeders/${testBreeder.id}/dogs`)
       .set('Authorization', `Bearer ${utils.getToken(testBreeder.id)}`);
+    // Return should have valid status code
     expect(res.statusCode).toEqual(200);
+    // Return dogs should be in alpha order
+    testDogs.sort((a, b) => (a.name < b.name ? -1 : 1));
     expect(res.body).toEqual(testDogs);
   });
 
