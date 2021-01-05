@@ -74,8 +74,8 @@ const post = {
         req.body.primaryImage === ''
       ) {
         // Get list of files in default dog image folder. Path is relative from project root
-        const defaultImageFolder = '/assets/defaultImages/dogs';
-        const imageOptions = fs.readdirSync(`.${defaultImageFolder}`);
+        const defaultImageFolder = 'assets/defaultImages/dogs';
+        const imageOptions = fs.readdirSync(`./${defaultImageFolder}`);
         // Select random file from the options, build path to it
         const fileName =
           imageOptions[Math.floor(Math.random() * imageOptions.length)];

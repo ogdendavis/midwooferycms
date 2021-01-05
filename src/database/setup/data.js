@@ -34,7 +34,7 @@ const dogs = [
     breed: 'testdog',
     sex: 'f',
     breederId,
-    primaryImage: '/assets/defaultImages/dogs/afghan.jpg',
+    primaryImage: 'assets/defaultImages/dogs/afghan.jpg',
   },
   {
     id: sireId,
@@ -42,7 +42,7 @@ const dogs = [
     breed: 'testdog',
     sex: 'm',
     breederId,
-    primaryImage: '/assets/defaultImages/dogs/malamute.jpg',
+    primaryImage: 'assets/defaultImages/dogs/malamute.jpg',
   },
   {
     id: pupId,
@@ -50,7 +50,7 @@ const dogs = [
     breed: 'testdog',
     sex: 'f',
     breederId,
-    primaryImage: '/assets/defaultImages/dogs/terrier.jpg',
+    primaryImage: 'assets/defaultImages/dogs/terrier.jpg',
   },
 ];
 
