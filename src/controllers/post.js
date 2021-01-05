@@ -1,5 +1,6 @@
 import utils from './utils';
 import { v4 as uuidv4 } from 'uuid';
+import fs from 'fs';
 
 const post = {
   create: async (req, res, next) => {
@@ -63,6 +64,24 @@ const post = {
         return res
           .status(400)
           .send('Invalid password: must be between 5-30 characters');
+      }
+    }
+    // For dog creation, insert a default image as primaryImage if none is provided
+    if (info.noun === 'dog') {
+      // Check if primaryImage exists, or if it's a blank string
+      if (
+        !req.body.hasOwnProperty('primaryImage') ||
+        req.body.primaryImage === ''
+      ) {
+        // Get list of files in default dog image folder. Path is relative from project root
+        const defaultImageFolder = '/assets/defaultImages/dogs';
+        const imageOptions = fs.readdirSync(`.${defaultImageFolder}`);
+        // Select random file from the options, build path to it
+        const fileName =
+          imageOptions[Math.floor(Math.random() * imageOptions.length)];
+        const fullPath = `${defaultImageFolder}/${fileName}`;
+        // Save the path in the req body, to be used for asset creation
+        req.body.primaryImage = fullPath;
       }
     }
 

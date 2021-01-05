@@ -102,13 +102,17 @@ describe('POST /dogs endpoints', () => {
       breederId: 'b2',
       litterId: 'l1',
       sex: 'm',
+      primaryImage: '',
     };
     const res = await request(app)
       .post('/dogs')
       .set('Authorization', `Bearer ${utils.getToken(dogData.breederId)}`)
       .send(dogData);
     expect(res.statusCode).toEqual(201);
-    expect(res.body).toEqual(utils.dataize(dogData));
+    expect(res.body).toEqual({
+      ...utils.dataize(dogData),
+      primaryImage: expect.anything(),
+    });
   });
 
   test('Creates a dog from minimum required data', async () => {

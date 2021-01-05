@@ -39,6 +39,9 @@ const dog = (sequelize, DataTypes) => {
         type: DataTypes.INTEGER,
         defaultValue: 0,
       },
+      primaryImage: {
+        type: DataTypes.STRING, // path to dog profile image on server
+      },
     },
     {
       paranoid: true,
@@ -47,6 +50,7 @@ const dog = (sequelize, DataTypes) => {
 
   Dog.associate = (models) => {
     Dog.belongsTo(models.Breeder);
+    Dog.hasMany(models.Image);
   };
 
   return Dog;

@@ -4,6 +4,7 @@ import Sequelize, { DataTypes } from 'sequelize';
 import dog from './dog';
 import breeder from './breeder';
 import litter from './litter';
+import image from './image';
 
 // import config
 import sequelizeConfig from '../config';
@@ -26,6 +27,7 @@ const models = {
   Breeder: breeder(sequelize, DataTypes),
   Litter: litter(sequelize, DataTypes),
   Dog: dog(sequelize, DataTypes),
+  Image: image(sequelize, DataTypes),
 };
 
 // Implement associations defined in the models:

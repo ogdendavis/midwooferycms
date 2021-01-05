@@ -96,6 +96,7 @@ const dogs = [
     breederId: 'b1',
     litterId: '',
     sex: 'f',
+    primaryImage: '',
   },
   {
     id: 'd2',
@@ -106,6 +107,7 @@ const dogs = [
     breederId: 'b2',
     litterId: '',
     sex: 'f',
+    primaryImage: '',
   },
   {
     id: 'd3',
@@ -116,6 +118,7 @@ const dogs = [
     breederId: 'b2',
     litterId: 'l1',
     sex: 'f',
+    primaryImage: '',
   },
   {
     id: 'd4',
@@ -126,6 +129,7 @@ const dogs = [
     breederId: 'b2',
     litterId: 'l1',
     sex: 'f',
+    primaryImage: '',
   },
   {
     id: 'd5',
@@ -136,6 +140,7 @@ const dogs = [
     breederId: 'b1',
     litterId: '',
     sex: 'm',
+    primaryImage: '',
   },
   {
     id: 'd6',
@@ -146,6 +151,7 @@ const dogs = [
     breederId: 'b4',
     litterId: '',
     sex: 'm',
+    primaryImage: '',
   },
   {
     id: 'd7',
@@ -156,6 +162,7 @@ const dogs = [
     breederId: 'b4',
     litterId: '',
     sex: 'm',
+    primaryImage: '',
   },
   {
     id: 'd8',
@@ -166,6 +173,7 @@ const dogs = [
     breederId: 'b4',
     litterId: '',
     sex: 'f',
+    primaryImage: '',
   },
   {
     id: 'd9',
@@ -176,6 +184,7 @@ const dogs = [
     breederId: 'b1',
     litterId: '',
     sex: 'f',
+    primaryImage: '',
   },
 ];
 
