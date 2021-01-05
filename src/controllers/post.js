@@ -1,6 +1,8 @@
 import utils from './utils';
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
+// For writing files
+import appPath from 'app-root-path';
 
 const post = {
   create: async (req, res, next) => {
@@ -141,6 +143,11 @@ const post = {
         : returnAsset;
 
     return res.status(201).send(retObj);
+  },
+
+  upload: async (req, res, next) => {
+    console.log('you sunk my battleship!');
+    console.log(appPath);
   },
 };
 

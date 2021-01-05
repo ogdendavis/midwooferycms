@@ -1,5 +1,8 @@
 import utils from './utils';
 
+// For reading files
+import appPath from 'app-root-path';
+
 const get = {
   all: async (req, res, next) => {
     // Just return a count of how many of that noun we have, for now
@@ -62,6 +65,23 @@ const get = {
           .send(
             `(Status code ${res.statusCode}) No ${targetNoun} listed for this ${req.asset.noun}`
           );
+  },
+
+  publicImage: async (req, res, next) => {
+    // Set route root!
+    const options = {
+      root: appPath.path,
+    };
+    // Get the file, with root and error handler
+    res.sendFile(
+      `/assets/defaultImages/${req.params.folder}/${req.params.file}`,
+      options,
+      (err) => {
+        if (err) {
+          next(err);
+        }
+      }
+    );
   },
 };
 

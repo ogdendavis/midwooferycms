@@ -1,26 +1,13 @@
 import Router from 'express';
 
-// Get project root for setting filepath
-import appPath from 'app-root-path';
+import controllers from '../controllers';
 
 const router = Router();
 
 // Default images should be publicly available
-router.get('/defaultImages/:folder/:file', (req, res, next) => {
-  // Set route root!
-  const options = {
-    root: appPath.path,
-  };
-  // Get the file, with root and error handler
-  res.sendFile(
-    `/assets/defaultImages/${req.params.folder}/${req.params.file}`,
-    options,
-    (err) => {
-      if (err) {
-        next(err);
-      }
-    }
-  );
-});
+router.get('/defaultImages/:folder/:file', controllers.get.publicImage);
+
+// Upload an image to a breeder's image folder. Requires auth.
+router.post('/upload/:breederId', controllers.post.upload);
 
 export default router;
