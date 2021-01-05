@@ -5,6 +5,7 @@ import express from 'express';
 // Express middleware
 import bodyParser from 'body-parser';
 import cors from 'cors';
+import fileUpload from 'express-fileupload';
 
 // Local imports
 import models from '../database/models';
@@ -14,6 +15,7 @@ import routes from '../routes';
 const app = express();
 
 // Middleware config
+app.use(fileUpload({ createParentPath: true }));
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());

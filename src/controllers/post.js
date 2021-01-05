@@ -146,8 +146,25 @@ const post = {
   },
 
   upload: async (req, res, next) => {
-    console.log('you sunk my battleship!');
-    console.log(appPath);
+    // If no image to upload found in request object, return error
+    if (!req.files || !req.files.hasOwnProperty('image')) {
+      return res.status(400).send('No attachment found');
+    }
+    // Extract the image from the request
+    const image = req.files.image;
+    // Save image in breeder folder in assets -- will create folder if doesn't exist
+    const imagePath = `assets/uploads/${req.params.breederId}/${image.name}`;
+    image.mv(`${appPath.path}/${imagePath}`);
+    // Create image object in database
+    const imageInDB = await req.context.models.Image.create({
+      id: uuidv4(),
+      type: image.mimetype,
+      name: image.name,
+      alt: '',
+      path: imagePath,
+    }).catch(next);
+    // Return created image object
+    return res.status(201).send(imageInDB);
   },
 };
 

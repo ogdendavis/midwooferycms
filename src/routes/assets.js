@@ -8,6 +8,10 @@ const router = Router();
 router.get('/defaultImages/:folder/:file', controllers.get.publicImage);
 
 // Upload an image to a breeder's image folder. Requires auth.
-router.post('/upload/:breederId', controllers.post.upload);
+router.post(
+  '/upload/:breederId',
+  controllers.auth.tokenExists,
+  controllers.post.upload
+);
 
 export default router;
