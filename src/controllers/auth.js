@@ -134,6 +134,11 @@ const isBreederAuthorized = (user, asset) => {
   else if (asset.hasOwnProperty('breederId')) {
     return user.id === asset.breederId;
   }
+  // images have to be checked by their upload folder
+  else if (asset.hasOwnProperty('path')) {
+    // Quick check -- split the path and see if any of the pieces are the breeder's id
+    return asset.path.split('/').includes(user.id);
+  }
   // We should only get here when trying to access a breeder record with a token for a different breeder
   return false;
 };

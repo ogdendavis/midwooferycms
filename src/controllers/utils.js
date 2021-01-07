@@ -1,3 +1,6 @@
+// For writing files
+import appPath from 'app-root-path';
+
 const utils = {
   asyncDoesAssetExist: async (id, model) => {
     const asset = await model.findByPk(id);
@@ -33,7 +36,9 @@ const utils = {
   getNoun(baseUrl) {
     // Take the baseUrl of a req object and return the singular noun
     // e.g. baseUrl of request is '/dogs', noun is 'dog'
-    return baseUrl.slice(1, -1);
+    const sliced = baseUrl.slice(1, -1);
+    // Account for special case of /assets baseUrl for image noun
+    return sliced === 'asset' ? 'image' : sliced;
   },
 
   isPasswordValid(pw) {
@@ -56,6 +61,17 @@ const utils = {
     delete retObj.password;
     delete retObj.salt;
     return retObj;
+  },
+
+  saveImage({ image, breederId }) {
+    try {
+      // Save image in breeder folder in assets -- will create folder if doesn't exist
+      const imagePath = `assets/uploads/${breederId}/${image.name}`;
+      image.mv(`${appPath.path}/${imagePath}`);
+      return imagePath;
+    } catch {
+      return false;
+    }
   },
 };
 

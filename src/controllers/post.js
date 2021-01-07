@@ -1,8 +1,6 @@
 import utils from './utils';
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
-// For writing files
-import appPath from 'app-root-path';
 
 const post = {
   create: async (req, res, next) => {
@@ -145,26 +143,32 @@ const post = {
     return res.status(201).send(retObj);
   },
 
-  upload: async (req, res, next) => {
+  uploadImage: async (req, res, next) => {
     // If no image to upload found in request object, return error
     if (!req.files || !req.files.hasOwnProperty('image')) {
       return res.status(400).send('No attachment found');
     }
-    // Extract the image from the request
+    // Extract image from request
     const image = req.files.image;
-    // Save image in breeder folder in assets -- will create folder if doesn't exist
-    const imagePath = `assets/uploads/${req.params.breederId}/${image.name}`;
-    image.mv(`${appPath.path}/${imagePath}`);
+    // Save image to server hard drive - returns path to image on success, false on failure
+    const imagePath = utils.saveImage({
+      image,
+      breederId: req.params.breederId,
+    });
     // Create image object in database
-    const imageInDB = await req.context.models.Image.create({
-      id: uuidv4(),
-      type: image.mimetype,
-      name: image.name,
-      alt: '',
-      path: imagePath,
-    }).catch(next);
-    // Return created image object
-    return res.status(201).send(imageInDB);
+    if (imagePath) {
+      const imageInDB = await req.context.models.Image.create({
+        id: uuidv4(),
+        type: image.mimetype,
+        name: image.name,
+        alt: '',
+        path: imagePath,
+      }).catch(next);
+      // Return created image object
+      return res.status(201).send(imageInDB);
+    }
+    // Error if save failed
+    return res.status(500).send('Failed to save image');
   },
 };
 

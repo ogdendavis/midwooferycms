@@ -1,4 +1,5 @@
 import utils from './utils';
+import fs from 'fs';
 
 const del = {
   deleteOne: async (req, res, next) => {
@@ -34,6 +35,10 @@ const del = {
         deletedAssociations.dogs,
         deletedAssociations.litters,
       ] = await asyncDeleteBreederAssociations(asset, req).catch(next);
+    }
+    // If deleting an image, remove the file from the hard drive
+    else if (info.noun === 'image') {
+      fs.unlinkSync(asset.path);
     }
 
     // By the time we get here, all side effects should have been handled

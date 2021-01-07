@@ -14,6 +14,38 @@ const randomPublicAssetFilename = () => {
   return options[Math.floor(Math.random() * options.length)];
 };
 
+const deleteTestBreederImages = () => {
+  // Get all breeders in test data
+  const breeders = utils.allBreeders();
+  // Iterate over the list of breeders
+  breeders.forEach((b) => {
+    const folderPath = `${appPath.path}/assets/uploads/${b.id}`;
+    // Check if upload folder exists for breeder
+    if (fs.existsSync(folderPath)) {
+      // If it does, kill it!
+      fs.rmdirSync(folderPath, { recursive: true });
+    }
+  });
+};
+
+const uploadRandomBreederImage = async () => {
+  // Uploads test image to random breeder's upload folder
+  // Returns array with breeder object and image object
+  const b = utils.randomBreeder();
+  const bImageRes = await uploadImage(b.id);
+  const bImage = bImageRes.body;
+  return [b, bImage];
+};
+
+const uploadImage = (breederId) => {
+  // Test image is in this folder as geekDog.jpg
+  // Returns the res from the request
+  return request(app)
+    .post(`/assets/upload/${breederId}`)
+    .set('Authorization', `Bearer: ${utils.getToken(breederId)}`)
+    .attach('image', `${__dirname}/geekDog.jpg`);
+};
+
 describe('GET public asset', () => {
   test('Retrieves public asset without auth', async () => {
     const testImageName = randomPublicAssetFilename();
@@ -44,36 +76,59 @@ describe('GET public asset', () => {
   });
 });
 
+describe('GET image from breeder upload folder', () => {
+  test('Success with valid credentials', async () => {
+    const [{ id }, image] = await uploadRandomBreederImage();
+    const res = await request(app)
+      .get(`/assets/${image.id}`)
+      .set('Authorization', `Bearer: ${utils.getToken(id)}`);
+    expect(res.statusCode).toEqual(200);
+    expect(res.body).toEqual(image);
+  });
+});
+
 describe('POST new image', () => {
   // Make sure to delete images created in these tests!
   afterAll(() => {
-    // Get all breeders
-    const breeders = utils.allBreeders();
-    // Iterate over the list of breeders
-    breeders.forEach((b) => {
-      const folderPath = `${appPath.path}/assets/uploads/${b.id}`;
-      // Check if upload folder exists for breeder
-      if (fs.existsSync(folderPath)) {
-        // If it does, kill it!
-        fs.rmdirSync(folderPath, { recursive: true });
-      }
-    });
+    deleteTestBreederImages();
   });
 
-  // Test image is in this folder as geekDog.jpg
   test('Uploads image to breeder folder', async () => {
-    const testBreeder = utils.randomBreeder();
-    const res = await request(app)
-      .post(`/assets/upload/${testBreeder.id}`)
-      .set('Authorization', `Bearer: ${utils.getToken(testBreeder.id)}`)
-      .attach('image', `${__dirname}/geekDog.jpg`);
+    const { id } = utils.randomBreeder();
+    const res = await uploadImage(id);
     // 201 to indicate asset creation
     expect(res.statusCode).toEqual(201);
     // image should exist in breeder folder on server
     expect(
-      fs.existsSync(
-        `${appPath.path}/assets/uploads/${testBreeder.id}/geekDog.jpg`
-      )
+      fs.existsSync(`${appPath.path}/assets/uploads/${id}/geekDog.jpg`)
     ).toEqual(true);
+    // image should be saved in database
+    const getRes = await request(app)
+      .get(`/assets/${res.body.id}`)
+      .set('Authorization', `Bearer: ${utils.getToken(id)}`);
+    expect(getRes.statusCode).toEqual(200);
+    expect(getRes.body).toEqual(res.body);
+  });
+});
+
+describe('DELETE existing image', () => {
+  // All images created for these test should have been deleted, but just to be safe
+  afterAll(() => {
+    deleteTestBreederImages();
+  });
+
+  test('Deletion removes image from server hard drive', async () => {
+    const { id } = utils.randomBreeder();
+    const uploadRes = await uploadImage(id);
+    expect(uploadRes.statusCode).toEqual(201);
+    // Now try to delete it!
+    const res = await request(app)
+      .delete(`/assets/${uploadRes.body.id}`)
+      .set('Authorization', `Bearer: ${utils.getToken(id)}`);
+    expect(res.statusCode).toEqual(200);
+    // Response should contain same image object
+    expect(res.body.id).toEqual(uploadRes.body.id);
+    // File should no longer exist on hard drive
+    expect(fs.existsSync(uploadRes.body.path)).toEqual(false);
   });
 });
