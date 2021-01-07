@@ -1,3 +1,6 @@
+import fs from 'fs';
+import appPath from 'app-root-path';
+
 import { breeders, superuser, litters, dogs } from './data';
 import createTokens from './tokens';
 
@@ -143,6 +146,18 @@ const utils = {
         .map((bd) => this.dataize(bd));
     }
     return dogs.map((d) => this.dataize(d));
+  },
+
+  deleteTestBreederImages() {
+    // Iterate over all breeders
+    this.allBreeders().forEach((b) => {
+      const folderPath = `${appPath.path}/assets/uploads/${b.id}`;
+      // Check if upload folder exists for breeder
+      if (fs.existsSync(folderPath)) {
+        // If it does, kill it!
+        fs.rmdirSync(folderPath, { recursive: true });
+      }
+    });
   },
 };
 

@@ -37,6 +37,8 @@ const get = {
         ? await req.context.models.Dog.findAll({
             where: { litterId: req.params.litterId },
           }).catch(next)
+        : targetNoun === 'images'
+        ? await req.asset.getImages()
         : false;
     // If targetNoun is plural, check to make sure the returned list isn't empty
     if (targetNoun.slice(-1) === 's' && targetAsset.length === 0) {

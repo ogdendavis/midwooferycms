@@ -151,6 +151,32 @@ describe('GET /breeders endpoints', () => {
       .set('Authorization', `Bearer ${utils.getToken(otherBreeder.id)}`);
     expect(res.statusCode).toEqual(403);
   });
+
+  test('GET /breeders/:breederId/images', async () => {
+    const { id } = utils.randomBreeder();
+    const token = utils.getToken(id);
+    // Upload an two images to breeder folder
+    const uploadRes = await request(app)
+      .post(`/assets/upload/${id}`)
+      .set('Authorization', `Bearer: ${token}`)
+      .attach('image', `${__dirname}/assets/geekDog.jpg`);
+    expect(uploadRes.statusCode).toEqual(201);
+    const uploadRes1 = await request(app)
+      .post(`/assets/upload/${id}`)
+      .set('Authorization', `Bearer: ${token}`)
+      .attach('image', `${__dirname}/assets/sillyDog.jpg`);
+    expect(uploadRes1.statusCode).toEqual(201);
+    // Getting all images should result in an array containing the one image we uploaded
+    const res = await request(app)
+      .get(`/breeders/${id}/images`)
+      .set('Authorization', `Bearer: ${token}`);
+    expect(res.statusCode).toEqual(200);
+    expect(res.body).toEqual(
+      expect.arrayContaining([uploadRes.body, uploadRes1.body])
+    );
+    // Delete all images in test breeder upload folders
+    utils.deleteTestBreederImages();
+  });
 });
 
 /*

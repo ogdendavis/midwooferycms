@@ -14,20 +14,6 @@ const randomPublicAssetFilename = () => {
   return options[Math.floor(Math.random() * options.length)];
 };
 
-const deleteTestBreederImages = () => {
-  // Get all breeders in test data
-  const breeders = utils.allBreeders();
-  // Iterate over the list of breeders
-  breeders.forEach((b) => {
-    const folderPath = `${appPath.path}/assets/uploads/${b.id}`;
-    // Check if upload folder exists for breeder
-    if (fs.existsSync(folderPath)) {
-      // If it does, kill it!
-      fs.rmdirSync(folderPath, { recursive: true });
-    }
-  });
-};
-
 const uploadRandomBreederImage = async () => {
   // Uploads test image to random breeder's upload folder
   // Returns array with breeder object and image object
@@ -43,7 +29,7 @@ const uploadImage = (breederId) => {
   return request(app)
     .post(`/assets/upload/${breederId}`)
     .set('Authorization', `Bearer: ${utils.getToken(breederId)}`)
-    .attach('image', `${__dirname}/geekDog.jpg`);
+    .attach('image', `${__dirname}/assets/geekDog.jpg`);
 };
 
 describe('GET public asset', () => {
@@ -90,7 +76,7 @@ describe('GET image from breeder upload folder', () => {
 describe('POST new image', () => {
   // Make sure to delete images created in these tests!
   afterAll(() => {
-    deleteTestBreederImages();
+    utils.deleteTestBreederImages();
   });
 
   test('Uploads image to breeder folder', async () => {
@@ -114,7 +100,7 @@ describe('POST new image', () => {
 describe('DELETE existing image', () => {
   // All images created for these test should have been deleted, but just to be safe
   afterAll(() => {
-    deleteTestBreederImages();
+    utils.deleteTestBreederImages();
   });
 
   test('Deletion removes image from server hard drive', async () => {

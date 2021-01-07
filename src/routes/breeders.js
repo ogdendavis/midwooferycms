@@ -24,6 +24,13 @@ router.get(
   controllers.get.associated
 );
 
+// Get all images from a breeder's uploads folder
+router.get(
+  '/:breederId/images',
+  controllers.auth.checkToken,
+  controllers.get.associated
+);
+
 // Create a breeder
 router.post('/', controllers.post.create);
 
