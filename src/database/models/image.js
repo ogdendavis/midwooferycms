@@ -27,6 +27,8 @@ const image = (sequelize, DataTypes) => {
   // TODO add litter association
   Image.associate = (models) => {
     Image.belongsTo(models.Dog);
+    Image.belongsTo(models.Litter);
+    Image.belongsTo(models.Breeder);
   };
 
   return Image;

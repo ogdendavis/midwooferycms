@@ -163,6 +163,7 @@ const post = {
         name: image.name,
         alt: '',
         path: imagePath,
+        breederId: req.params.breederId,
       }).catch(next);
       // Return created image object
       return res.status(201).send(imageInDB);

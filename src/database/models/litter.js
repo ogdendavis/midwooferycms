@@ -83,6 +83,7 @@ const litter = (sequelize, DataTypes) => {
 
   Litter.associate = (models) => {
     Litter.belongsTo(models.Breeder);
+    Litter.hasMany(models.Image);
   };
 
   return Litter;

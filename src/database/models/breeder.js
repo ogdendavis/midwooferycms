@@ -85,6 +85,7 @@ const breeder = (sequelize, DataTypes) => {
     Breeder.hasMany(models.Litter, {
       as: { plural: 'Litters', singular: 'Litter' },
     });
+    Breeder.hasMany(models.Image);
   };
 
   return Breeder;
