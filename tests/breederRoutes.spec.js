@@ -1,5 +1,7 @@
-// Import supertest and API app
 import request from 'supertest';
+import fs from 'fs';
+import appPath from 'app-root-path';
+
 import app from '../src/server';
 
 // Utils to bring in helpers and data from which database was created
@@ -642,5 +644,37 @@ describe('DELETE /breeders endpoint', () => {
       expect(res.statusCode).toEqual(404);
       expect(res.body).toEqual({});
     }
+  });
+
+  test('Breeder deletion also deletes associated images', async () => {
+    const { id } = utils.randomBreeder();
+    const token = utils.getToken(id);
+    const superToken = utils.getToken('super');
+    // Upload an image, first
+    const uploadRes = await request(app)
+      .post(`/assets/upload/${id}`)
+      .set('Authorization', `Bearer: ${token}`)
+      .attach('image', `${__dirname}/assets/geekDog.jpg`);
+    expect(uploadRes.statusCode).toEqual(201);
+    // Check that the image exists on the hard drive
+    expect(
+      fs.existsSync(`${appPath}/assets/uploads/${id}/geekDog.jpg`)
+    ).toEqual(true);
+    // Delete the breeder
+    const resB = await request(app)
+      .delete(`/breeders/${id}`)
+      .set('Authorization', `Bearer ${superToken}`);
+    expect(resB.statusCode).toEqual(200);
+    // Check that the image is removed from the database
+    const resI = await request(app)
+      .get(`/assets/${uploadRes.id}`)
+      .set('Authorization', `Bearer: ${superToken}`);
+    expect(resI.statusCode).toEqual(404);
+    // Check that the image file is removed from the hard drive
+    expect(
+      fs.existsSync(`${appPath}/assets/uploads/${id}/geekDog.jpg`)
+    ).toEqual(false);
+    // // Delete all images in test breeder upload folders
+    // utils.deleteTestBreederImages();
   });
 });

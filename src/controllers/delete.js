@@ -57,7 +57,7 @@ const del = {
 };
 
 const asyncDeleteBreederAssociations = async (breeder, req) => {
-  // Deletes dogs and litters, returns deleted
+  // Deletes dogs, litters, and images. Returns deleted dogs and litters
   const byeDogs = await breeder.getDogs();
   if (byeDogs.length > 0) {
     req.context.models.Dog.destroy({
@@ -69,6 +69,21 @@ const asyncDeleteBreederAssociations = async (breeder, req) => {
   if (byeLitters.length > 0) {
     req.context.models.Litter.destroy({
       where: { id: byeLitters.map((l) => l.id) },
+    });
+  }
+
+  const byeImages = await breeder.getImages();
+  if (byeImages.length > 0) {
+    // Get all image IDs and paths to files
+    const imageIds = byeImages.map((i) => i.id);
+    const imagePaths = byeImages.map((i) => i.path);
+    // Use IDs to remove images from database
+    req.context.models.Image.destroy({
+      where: { id: imageIds },
+    });
+    // Then use paths to delete the files from the hard drive
+    imagePaths.forEach((path) => {
+      fs.unlinkSync(path);
     });
   }
 
