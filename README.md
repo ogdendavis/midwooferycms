@@ -59,6 +59,8 @@ No body needed for GET requests -- all info is sent via the path
 - **`/litters/[id]`** - Returns an object of the litter with the provided ID
 - **`/litters/[id]/pups`** - Returns an array of all dogs in the database who are listed as pups (offpsring) of the litter with the provided ID
 - **`/litters/[id]/breeder`** - Returns an object of the breeder associated with the litter with the provided ID
+- **`/assets/[id]`** - Returns an object of the image with the provided ID
+- **`/assets/defaultImages/[folder]/[file]`** - Returns an object of the public image at the specified location. No auth required.
 
 ### POST
 
@@ -68,6 +70,7 @@ Send a JSON object in the request body. Required and optional arguments included
 - **`/breeders`** - Creates a new breeder. Arguments: firstname (required), lastname (required), city, state. Returns the object of the newly created breeder
 - **`/litters`** - Creates a new litter. Arguments: breederId (required), dam (required), sire, count, pups. Returns the object of the newly created litter
 - **`/[id]/restore`** - Restores a deleted dog, breeder, or litter with the provided ID. Also restores associations with other objects (e.g. restoring a litter with pups also re-adds the litterId to those dogs)
+- **`/assets/upload/[id]`** - Creates a new image associated with the breeder with the provided ID. Must attach an image to the request. Saves the image in the database, and stores the file itself in `[root]/assets/[id]/[filename]`
 
 ### PUT
 
@@ -82,5 +85,6 @@ Send a JSON object in the request body. Required and optional arguments included
 No body needed for DELETE requests -- all info is sent via the path. Deletes are ["paranoid"](https://sequelize.org/master/manual/paranoid.html), so deleted objects can be restored using a PUT request
 
 - **`/dogs/[id]`** - Deletes the dog with indicated ID, also removing any associations with breeder and litter. Returns an object with the deleted dog
-- **`/breeders/[id]`** - Deletes the breeder with indicated ID, also deleting associated dogs and litters. Returns an object with the deleted breeder
+- **`/breeders/[id]`** - Deletes the breeder with indicated ID, also deleting associated dogs, litters, and images. Returns an object with the deleted breeder, dogs, and litters.
 - **`/litters/[id]`** - Deletes the litter with indicated ID, also removing litterId from any pups and removing association with breeder. Returns an object with the deleted litter
+- **`/assets/[id]`** - Deletes the image with the indicated ID, permanently removing its entry from the database and deleting the file from the hard drive.
